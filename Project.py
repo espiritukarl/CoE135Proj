@@ -1,3 +1,5 @@
+#BASE CODE from OPENCV Website
+
 import numpy as np
 import cv2
 
