@@ -1,0 +1,8 @@
+Base Code: https://gist.github.com/kittinan/ 
+Base Code Feature: 1-sided Video-only Communication thru Sockets
+
+Features to Add:
+> Audio Communication thru PyAudio
+> More users to be connected (Multi-user)
+> IP/Port Assigning
+
