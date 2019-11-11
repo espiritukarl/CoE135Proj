@@ -1,4 +1,5 @@
-#BASE CODE from OPENCV Website
+# BASE CODE from OPENCV Website
+# Opens Camera. No Sockets yet.
 
 import numpy as np
 import cv2
@@ -6,7 +7,7 @@ import cv2
 cap = cv2.VideoCapture(0)
 #Check whether user selected camera is opened successfully.
 if not (cap.isOpened()):
-    print("Could not open video device")
+    print("Could not open video device!")
 
 while(True):
     # Capture frame-by-frame
