@@ -9,7 +9,7 @@ from threading import Thread
 
 HOST = input("Enter Host IP:\n")        # check ipconfig for an available local iPV4 address
 PORT = int(input("Enter Desired PORT:\n"))  #input 0000 - 9999 as port
-BufferSize = 4096
+Buffersize = 4096
 FORMAT=pyaudio.paInt16
 CHANNELS=2
 RATE=44100
@@ -25,16 +25,17 @@ def send():
     while True:
         sound = my_aud_msg.read(CHUNK) #read from stream
         #sound_arr = array('h',sound)create array of the read data    
-        client.sendall(sound)         
+        client_socket.sendall(sound)         
 
 def receive():
     while True:
         databytes = b''
-        while len(databytes) != BufferSize: 
+        size = len(databytes)
+        while  size != Buffersize: 
             if( (Buffersize-len(databytes)) > (4 * CHUNK)): #if databytes have nothing in it read and store
-                databytes += client.recv(Buffersize)
+                databytes += client_socket.recv(Buffersize)
             else:
-                databytes += client.recv(Buffersize-len(databytes)) #read and append remaining  data 
+                databytes += client_socket.recv(Buffersize-len(databytes)) #read and append remaining  data 
 
         my_aud_msg.write(sound) #play the sound
 
