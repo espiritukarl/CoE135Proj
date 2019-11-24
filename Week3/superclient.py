@@ -141,7 +141,7 @@ PORTAC = 4848
 BUFFSIZ = 1024
 
 # for chat room
-chat_client_socket = socket(socket.AF_INET, socket.SOCK_STREAM)
+chat_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 chat_client_socket.connect(HOST,PORT)
 
 #MULTITHREADING PART
