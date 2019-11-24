@@ -1,4 +1,5 @@
-# Version 1.00
+# Version 1.00 
+# to fix: tkinter not closing sockets properly, server not multithreaded to be a client as well
 from socket import AF_INET, socket, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from threading import Thread
 
