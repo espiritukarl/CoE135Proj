@@ -10,5 +10,5 @@ The list below shows our progress made every week.
 Week 0: Accessing the PC Camera using OpenCV library  
 Week 1: Sending of camera stream data through Sockets. (1-sided video-only communication)  
 Week 2: Implementation of Multi-threading and Syncronization to make a 1-1 video-only communication.  
-Week 3: Integrating Audio Stream sending to make a 1-1 Video-Audio Communication (Unstable)
-Week 4: Stable One-to-one Video Communication with One-sided Audio Communication (Client hears the Host)
+Week 3: Integrating Audio Stream sending to make a 1-1 Video-Audio Communication (Unstable)  
+Week 4: Stable One-to-one Video Communication with One-sided Audio Communication (Client hears the Host). Chatbox implemented.
