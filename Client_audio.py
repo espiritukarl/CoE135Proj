@@ -2,13 +2,12 @@
 import threading
 from threading import Thread
 import time
-import cv2
 import io
 import socket
 import sys
 import struct
 import time
-import pickle
+import pyaudio
 
 
 # Define a function for the thread
