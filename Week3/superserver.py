@@ -16,6 +16,7 @@ import time
 import pickle
 import pyaudio
 import select
+import tkinter
 
 
 # Define a function for the thread
@@ -164,7 +165,7 @@ def chat_accept_connections():
 
 def chat_handler(client):
     # handles the clients
-    name = client.recv(BUFSIZ).decode("utf8")
+    name = client.recv(BUFFSIZ).decode("utf8")
     welcome = 'Welcome to the chatroom %s! Type {quit} if you want to exit.' % name
     if not name:
         client.close()
@@ -174,7 +175,7 @@ def chat_handler(client):
     clients[client] = name
     
     while True:
-        msg = client.recv(BUFSIZ)
+        msg = client.recv(BUFFSIZ)
         if msg.decode("utf8") != "{quit}":
             print(name + ": " + msg.decode("utf8"))
             broadcast(msg, name+": ")
@@ -191,6 +192,52 @@ def broadcast(msg, prefix=""):  # prefix is for name identification.
     for sock in clients:
         sock.send(bytes(prefix, "utf8")+msg)
             
+def receive():
+    # Handles receiving of messages
+    while True:
+        try:
+            msg = CHATCLIENT.recv(BUFFSIZ).decode("utf8")
+            msg_list.insert(tkinter.END, msg)
+        except OSError:
+            break
+            
+def send(event=None):  # event is for tkinter
+    # handles sending of messages
+    msg = my_msg.get()
+    my_msg.set("")  # Clears input field.
+    CHATCLIENT.send(bytes(msg, "utf8"))
+    if msg == "{quit}":
+        CHATCLIENT.close()
+        top.destroy()
+        
+def on_closing(event=None):
+    # for closing of window
+    my_msg.set("{quit}")
+    send()
+      
+#tkinter GUI shit
+top = tkinter.Tk()
+top.title("Chatbox")
+
+messages_frame = tkinter.Frame(top)
+my_msg = tkinter.StringVar()  # For the messages to be sent.
+scrollbar = tkinter.Scrollbar(messages_frame)  # To navigate through past messages.
+# Following will contain the messages.
+msg_list = tkinter.Listbox(messages_frame, height=35, width=75, yscrollcommand=scrollbar.set)
+scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
+msg_list.pack()
+messages_frame.pack()
+
+entry_field = tkinter.Entry(top, textvariable=my_msg)
+entry_field.bind("<Return>", send)
+entry_field.pack()
+send_button = tkinter.Button(top, text="Send", command=send)
+send_button.pack()
+
+top.protocol("WM_DELETE_WINDOW", on_closing)
+
+#sockets:
 print("YOU ARE THE MAIN HOST!")
 #HOST = input("Enter Your Server IP:\n")        # check ipconfig for an available local iPV4 address
 #HOST2 = input("Enter Client IP ADDRESS:\n")        # check ipconfig for an available local iPV4 address
@@ -203,12 +250,12 @@ PORT2 = 2001
 PORT3 = 3001
 PORT4 = 4001
 
-BUFSIZ = 1024
-ADDR = (HOST,33000)
+BUFFSIZ = 1024
+
 # for chat
 CHATSERVER=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 CHATSERVER.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-CHATSERVER.bind(ADDR)
+CHATSERVER.bind((HOST,PORT))
 CHATSERVER.listen(5)
 
 #MULTITHREADING PART
@@ -221,7 +268,19 @@ t3.start()
 t4 = Thread(target=server4, args=(HOST,PORT4))
 #t4.start()
 
-chat_thread = Thread(target=chat_accept_connections)
-chat_thread.start()
-chat_thread.join()
-CHATSERVER.close()
+if __name__ == "__main__":
+    # chat room server
+    chat_server_thread = Thread(target=chat_accept_connections)
+    chat_server_thread.start()
+      
+    # chat room client
+    CHATCLIENT = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    CHATCLIENT.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    CHATCLIENT.connect((HOST,PORT))
+    chat_client_thread = Thread(target=receive)
+    chat_client_thread.start()
+      
+    tkinter.mainloop()
+   
+    chat_server_thread.join()
+    CHATSERVER.close()
