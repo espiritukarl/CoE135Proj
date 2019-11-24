@@ -2,7 +2,7 @@
 # PURE CLIENT. NO SERVER INCLUDED.
 # AUDIO NOT YET INCLUDED
 # SEPARATED INTO WEEK3 
-
+# added Chatroom
 
 import threading
 from threading import Thread
@@ -14,6 +14,7 @@ import sys
 import struct
 import time
 import pickle
+import tkinter
 
 def client1(HOST, PORT): #sends the data to server
   print("CLIENT1: Starting...")
@@ -80,8 +81,53 @@ def client2(HOST2, PORT2):   #receives data from server
         cv2.imshow('Host Camera',frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
           break
+# for chat:
+def receive():
+    # Handles receiving of messages
+    while True:
+        try:
+            msg = chat_client_socket.recv(BUFSIZ).decode("utf8")
+            msg_list.insert(tkinter.END, msg)
+        except OSError:  # Possibly client has left the chat.
+            break
+            
+def send(event=None):  # event is for tkinter
+    # handles sending of messages
+    msg = my_msg.get()
+    my_msg.set("")  # Clears input field.
+    chat_client_socket.send(bytes(msg, "utf8"))
+    if msg == "{quit}":
+        chat_client_socket.close()
+        top.destroy()
+        
+def on_closing(event=None):
+    # for closing of window
+    my_msg.set("{quit}")
+    send()
+    
+#tkinter GUI shit
+top = tkinter.Tk()
+top.title("Chatbox")
 
+messages_frame = tkinter.Frame(top)
+my_msg = tkinter.StringVar()  # For the messages to be sent.
+scrollbar = tkinter.Scrollbar(messages_frame)  # To navigate through past messages.
+# Following will contain the messages.
+msg_list = tkinter.Listbox(messages_frame, height=35, width=75, yscrollcommand=scrollbar.set)
+scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
+msg_list.pack()
+messages_frame.pack()
 
+entry_field = tkinter.Entry(top, textvariable=my_msg)
+entry_field.bind("<Return>", send)
+entry_field.pack()
+send_button = tkinter.Button(top, text="Send", command=send)
+send_button.pack()
+
+top.protocol("WM_DELETE_WINDOW", on_closing)
+
+#sockets:
 print("YOU ARE A CLIENT!")
 #HOST = input("Enter HOST IP:\n")        # check ipconfig for an available local iPV4 address
 
@@ -92,6 +138,11 @@ PORT2 = 8787
 PORTAS = 4545
 PORTAC = 4848
 
+BUFFSIZ = 1024
+
+# for chat room
+chat_client_socket = socket(socket.AF_INET, socket.SOCK_STREAM)
+chat_client_socket.connect(HOST,PORT)
 
 #MULTITHREADING PART
 
@@ -102,3 +153,7 @@ t.start()
 t2 = Thread(target=client2, args=(HOST,PORT2))
 #t2.daemon = True
 t2.start()
+
+chat_thread = Thread(target=receive)
+chat_thread.start()
+tkinter.mainloop()
