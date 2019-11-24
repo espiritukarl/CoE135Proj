@@ -1,8 +1,8 @@
-# SUPERSERVER 1.00
+# SUPERSERVER 1.2
 # PURE SERVER. NO CLIENT INCLUDED.
 # AUDIO NOT YET INCLUDED
 # SEPARATED INTO WEEK3 
-# Added Chatbox
+# Added Chatbox! (see Terminal)
 
 import threading
 from threading import Thread
@@ -92,6 +92,8 @@ def chat_handler(client):
     # handles the clients
     name = client.recv(BUFSIZ).decode("utf8")
     welcome = 'Welcome to the chatroom %s! Type {quit} if you want to exit.' % name
+    if not name:
+        client.close()
     client.send(bytes(welcome, "utf8"))
     msg = "%s has joined the chat!" % name
     broadcast(bytes(msg, "utf8"))
@@ -120,18 +122,19 @@ print("YOU ARE THE MAIN HOST!")
 #HOST2 = input("Enter Client IP ADDRESS:\n")        # check ipconfig for an available local iPV4 address
 
 HOST = "192.168.100.6"
-
+addresses = {}
+clients = {}
 PORT = 9898
 PORT2 = 8787
 PORTAS = 4848
 PORTAC = 4545
 
 BUFSIZ = 1024
-
+ADDR = (HOST,33000)
 # for chat
-CHATSERVER = scoket.socket(socket.AF_INET, socket.SOCK_STREAM)
+CHATSERVER=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 CHATSERVER.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-CHATSERVER.bind(HOST,PORT)
+CHATSERVER.bind(ADDR)
 CHATSERVER.listen(5)
 
 #MULTITHREADING PART
@@ -147,5 +150,3 @@ chat_thread = Thread(target=chat_accept_connections)
 chat_thread.start()
 chat_thread.join()
 CHATSERVER.close()
-
-

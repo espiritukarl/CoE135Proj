@@ -1,4 +1,4 @@
-# SUPERCLIENT 1.00
+# SUPERCLIENT 1.20
 # PURE CLIENT. NO SERVER INCLUDED.
 # AUDIO NOT YET INCLUDED
 # SEPARATED INTO WEEK3 
@@ -86,7 +86,7 @@ def receive():
     # Handles receiving of messages
     while True:
         try:
-            msg = chat_client_socket.recv(BUFSIZ).decode("utf8")
+            msg = chat_client_socket.recv(BUFFSIZ).decode("utf8")
             msg_list.insert(tkinter.END, msg)
         except OSError:  # Possibly client has left the chat.
             break
@@ -140,9 +140,11 @@ PORTAC = 4848
 
 BUFFSIZ = 1024
 
+ADDR=(HOST,33000)
+
 # for chat room
 chat_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-chat_client_socket.connect(HOST,PORT)
+chat_client_socket.connect(ADDR)
 
 #MULTITHREADING PART
 
