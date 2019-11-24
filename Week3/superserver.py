@@ -129,7 +129,7 @@ PORTAC = 4545
 BUFSIZ = 1024
 
 # for chat
-CHATSERVER = socket(socket.AF_INET, socket.SOCK_STREAM)
+CHATSERVER = scoket.socket(socket.AF_INET, socket.SOCK_STREAM)
 CHATSERVER.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 CHATSERVER.bind(HOST,PORT)
 CHATSERVER.listen(5)
