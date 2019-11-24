@@ -1,6 +1,6 @@
-# SUPERCLIENT 1.20
+# SUPERCLIENT 1.30
 # PURE CLIENT. NO SERVER INCLUDED.
-# AUDIO NOT YET INCLUDED
+# AUDIO INCLUDED - ONE WAY ONLY
 # SEPARATED INTO WEEK3 
 # added Chatroom
 
@@ -15,6 +15,7 @@ import struct
 import time
 import pickle
 import tkinter
+import pyaudio
 
 def client1(HOST, PORT): #sends the data to server
   print("CLIENT1: Starting...")
@@ -81,6 +82,53 @@ def client2(HOST2, PORT2):   #receives data from server
         cv2.imshow('Host Camera',frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
           break
+
+
+def client3(HOST3,PORT3):
+  FORMAT = pyaudio.paInt16
+  CHANNELS = 1
+  RATE = 44100
+  CHUNK = 4096
+
+  s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  s3.connect((HOST3,PORT3))
+  audio = pyaudio.PyAudio()
+  stream3 = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True, frames_per_buffer=CHUNK)
+  print("CLIENT3: Playing...")
+
+  try:
+    while True:
+        data3 = s3.recv(CHUNK)
+        stream3.write(data3)
+  except KeyboardInterrupt:
+    pass
+
+  print('CLIENT3: Shutting down')
+  s3.close()
+  stream3.close()
+  audio.terminate()
+
+def client4(HOST4,PORT4):
+  # Audio
+  CHUNK = 1024 * 4
+  FORMAT = pyaudio.paInt16
+  CHANNELS = 2
+  RATE = 44100
+  p4 = pyaudio.PyAudio()
+  stream4 = p4.open(format=FORMAT,
+                channels=CHANNELS,
+                rate=RATE,
+                input=True,
+                frames_per_buffer=CHUNK)
+
+  print("CLIENT4: Recording")
+
+  with socket.socket() as client_socket:
+    client_socket.connect((HOST, PORT))
+    while True:
+        data = stream4.read(CHUNK)
+        client_socket.send(data)
+
 # for chat:
 def receive():
     # Handles receiving of messages
@@ -133,10 +181,10 @@ print("YOU ARE A CLIENT!")
 
 HOST = "192.168.100.6"
 
-PORT = 9898
-PORT2 = 8787
-PORTAS = 4545
-PORTAC = 4848
+PORT  = 1001
+PORT2 = 2001
+PORT3 = 3001
+PORT4 = 4001
 
 BUFFSIZ = 1024
 
@@ -147,14 +195,14 @@ chat_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 chat_client_socket.connect(ADDR)
 
 #MULTITHREADING PART
-
-t = Thread(target=client1, args=(HOST,PORT))
-#t.daemon = True
+t = Thread(target=client1, args=(HOST,PORT ))
 t.start()
-
 t2 = Thread(target=client2, args=(HOST,PORT2))
-#t2.daemon = True
 t2.start()
+t3 = Thread(target=client3, args=(HOST,PORT3))
+t3.start()
+t4 = Thread(target=client4, args=(HOST,PORT4))
+#t4.start()
 
 chat_thread = Thread(target=receive)
 chat_thread.start()

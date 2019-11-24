@@ -1,8 +1,8 @@
-# SUPERSERVER 1.2
+# SUPERSERVER 1.30
 # PURE SERVER. NO CLIENT INCLUDED.
-# AUDIO NOT YET INCLUDED
+# AUDIO INCLUDED - ONE-WAY ONLY
 # SEPARATED INTO WEEK3 
-# Added Chatbox! (see Terminal)
+# Added Chatbox! (See Terminal)
 
 import threading
 from threading import Thread
@@ -79,6 +79,80 @@ def server2(HOST2, PORT2):    #sends data to client2
         img_counter2 += 1
     cam2.release()
 
+def server3(HOST3,PORT3): #sends audio to client
+  print("SERVER3 (S/AUDIO): Waiting for client...")
+  FORMAT = pyaudio.paInt16
+  CHANNELS = 1
+  RATE = 44100
+  CHUNK = 4096
+  audio = pyaudio.PyAudio()
+
+  serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  serversocket.bind((HOST3, PORT3))
+  serversocket.listen(10)
+
+  def callback(in_data, frame_count, time_info, status):
+    for s in read_list[1:]:
+        s.send(in_data)
+    return (None, pyaudio.paContinue)
+
+  # start Recording
+  stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK, stream_callback=callback)
+  # stream.start_stream()
+
+  read_list = [serversocket]
+  print ("SERVER3: Recording...")
+
+  try:
+    while True:
+        readable, writable, errored = select.select(read_list, [], [])
+        for s in readable:
+            if s is serversocket:
+                (clientsocket, address) = serversocket.accept()
+                read_list.append(clientsocket)
+                print ("Connection from", address)
+            else:
+                data = s.recv(1024)
+                if not data:
+                    read_list.remove(s)
+  except KeyboardInterrupt:
+    pass
+
+  print ("Finished recording")
+  serversocket.close()
+  # stop Recording
+  stream.stop_stream()
+  stream.close()
+  audio.terminate()
+
+def server4(HOST4,PORT4): #plays the client's audio
+  print("SERVER4 (R/AUDIO): Waiting for client...")
+  p2 = pyaudio.PyAudio()
+  CHUNK2 = 1024 * 4
+  FORMAT2 = pyaudio.paInt16
+  CHANNELS2 = 2
+  RATE2 = 44100
+  stream2 = p2.open(format=FORMAT2,
+                channels=CHANNELS2,
+                rate=RATE2,
+                output=True,
+                frames_per_buffer=CHUNK2)
+
+  with socket.socket() as server_socket2:
+    server_socket2.bind((HOST4, PORT4))
+    server_socket2.listen(1)
+    conn2, address2 = server_socket2.accept()
+    print("Connection from " + address2[0] + ":" + str(address2[1]))
+
+    data2 = conn2.recv(4096)
+    while data2 != "":
+        data2 = conn2.recv(4096)
+        stream2.write(data2)
+
+  stream2.stop_stream()
+  stream2.close()
+  p2.terminate()
+
 def chat_accept_connections():
     # accepts incoming clients
     while True:
@@ -124,10 +198,10 @@ print("YOU ARE THE MAIN HOST!")
 HOST = "192.168.100.6"
 addresses = {}
 clients = {}
-PORT = 9898
-PORT2 = 8787
-PORTAS = 4848
-PORTAC = 4545
+PORT  = 1001
+PORT2 = 2001
+PORT3 = 3001
+PORT4 = 4001
 
 BUFSIZ = 1024
 ADDR = (HOST,33000)
@@ -138,13 +212,14 @@ CHATSERVER.bind(ADDR)
 CHATSERVER.listen(5)
 
 #MULTITHREADING PART
-t = Thread(target=server1, args=(HOST,PORT))
-#t.daemon = True
+t = Thread(target=server1, args=(HOST,PORT ))
 t.start()
-
 t2 = Thread(target=server2, args=(HOST,PORT2))
-#t.daemon = True
 t2.start()
+t3 = Thread(target=server3, args=(HOST,PORT3))
+t3.start()
+t4 = Thread(target=server4, args=(HOST,PORT4))
+#t4.start()
 
 chat_thread = Thread(target=chat_accept_connections)
 chat_thread.start()
