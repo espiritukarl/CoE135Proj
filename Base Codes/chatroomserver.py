@@ -2,7 +2,6 @@
 # Final. Just need to integrate to Video-Audio stream. No more client w/ server
 from socket import AF_INET, socket, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from threading import Thread
-import tkinter
 
 def accept_connections():
     # accepts incoming clients
