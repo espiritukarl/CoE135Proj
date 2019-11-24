@@ -2,6 +2,7 @@
 # PURE SERVER. NO CLIENT INCLUDED.
 # AUDIO NOT YET INCLUDED
 # SEPARATED INTO WEEK3 
+# Added Chatbox
 
 import threading
 from threading import Thread
@@ -78,7 +79,44 @@ def server2(HOST2, PORT2):    #sends data to client2
         img_counter2 += 1
     cam2.release()
 
+def chat_accept_connections():
+    # accepts incoming clients
+    while True:
+        client, addr = CHATSERVER.accept()
+        print("%s:%s has connected." % addr)
+        client.send(bytes("Type your name and press 'Enter'!", "utf8"))
+        addresses[client] = addr
+        Thread(target=chat_handler, args=(client,)).start()
 
+def chat_handler(client):
+    # handles the clients
+    name = client.recv(BUFSIZ).decode("utf8")
+    welcome = 'Welcome to the chatroom %s! Type {quit} if you want to exit.' % name
+    if not name:
+        client.close()
+    client.send(bytes(welcome, "utf8"))
+    msg = "%s has joined the chat!" % name
+    broadcast(bytes(msg, "utf8"))
+    clients[client] = name
+    
+    while True:
+        msg = client.recv(BUFSIZ)
+        if msg.decode("utf8") != "{quit}":
+            print(name + ": " + msg.decode("utf8"))
+            broadcast(msg, name+": ")
+        else:
+            #client.send(bytes("{quit}", "utf8"))
+            #client.close()
+            print(name + " has disconnected.")
+            del clients[client]
+            broadcast(bytes("%s has left the chat." % name, "utf8"))
+            break
+            
+def broadcast(msg, prefix=""):  # prefix is for name identification.
+    # show message to clients
+    for sock in clients:
+        sock.send(bytes(prefix, "utf8")+msg)
+            
 print("YOU ARE THE MAIN HOST!")
 #HOST = input("Enter Your Server IP:\n")        # check ipconfig for an available local iPV4 address
 #HOST2 = input("Enter Client IP ADDRESS:\n")        # check ipconfig for an available local iPV4 address
@@ -90,6 +128,13 @@ PORT2 = 8787
 PORTAS = 4848
 PORTAC = 4545
 
+BUFSIZ = 1024
+
+# for chat
+CHATSERVER = socket(socket.AF_INET, socket.SOCK_STREAM)
+CHATSERVER.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+CHATSERVER.bind(HOST,PORT)
+CHATSERVER.listen(5)
 
 #MULTITHREADING PART
 t = Thread(target=server1, args=(HOST,PORT))
@@ -99,5 +144,10 @@ t.start()
 t2 = Thread(target=server2, args=(HOST,PORT2))
 #t.daemon = True
 t2.start()
+
+chat_thread = Thread(target=chat_accept_connections)
+chat_thread.start()
+chat_thread.join()
+CHATSERVER.close()
 
 
