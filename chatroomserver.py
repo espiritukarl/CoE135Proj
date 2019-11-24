@@ -1,6 +1,5 @@
-# Version 1.10
-# things fixed from Version 1.00: server has a chatbox now too
-# things needed to be fixed: when a client disconnects, server bugs (i.e. it still accepts new clients but they cant send or recv)
+# Version 1.20
+# Final. Just need to integrate to Video-Audio stream.
 from socket import AF_INET, socket, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from threading import Thread
 import tkinter
@@ -18,6 +17,8 @@ def handler(client):
     # handles the clients
     name = client.recv(BUFSIZ).decode("utf8")
     welcome = 'Welcome to the chatroom %s! Type {quit} if you want to exit.' % name
+    if not name:
+        client.close()
     client.send(bytes(welcome, "utf8"))
     msg = "%s has joined the chat!" % name
     broadcast(bytes(msg, "utf8"))
@@ -29,9 +30,11 @@ def handler(client):
             print(name + ": " + msg.decode("utf8"))
             broadcast(msg, name+": ")
         else:
+            #client.send(bytes("{quit}", "utf8"))
+            #client.close()
+            print(name + " has disconnected.")
+            del clients[client]
             broadcast(bytes("%s has left the chat." % name, "utf8"))
-            clients.remove(client)
-            client.close()
             break
 
 def broadcast(msg, prefix=""):  # prefix is for name identification.
@@ -48,7 +51,6 @@ def receive():
         except OSError:  # Possibly client has left the chat.
             break
 
-
 def send(event=None):  # event is for tkinter
     # handles sending of messages
     msg = my_msg.get()
@@ -57,7 +59,6 @@ def send(event=None):  # event is for tkinter
     if msg == "{quit}":
         client_socket.close()
         top.destroy()
-
 
 def on_closing(event=None):
     # for closing of window
