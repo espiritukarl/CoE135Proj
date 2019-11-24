@@ -1,58 +1,113 @@
-import socket
-import pyaudio
-import wave
-import sys
-import pickle
-import time
-import struct
+
+import threading
 from threading import Thread
+import time
+import cv2
+import io
+import socket
+import sys
+import struct
+import time
+import pickle
+import pyaudio
+import select
 
-HOST = input("Enter Host IP:\n")        # check ipconfig for an available local iPV4 address
-PORT = int(input("Enter Desired PORT:\n"))  #input 0000 - 9999 as port
-Buffersize = 4096
-FORMAT=pyaudio.paInt16
-CHANNELS=2
-RATE=44100
-CHUNK=1024
+trigger = 0
 
-print('Preparing sockets for connection...')
-s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-s.bind((HOST,PORT))
-s.listen(10)
-print('Sockets prepared and ready.')
+# Define a function for the thread
+def server(HOST, PORT):
+   print('SERVER: Preparing sockets for connection...')
+   serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+   serversocket.bind((HOST, PORT))
+   serversocket.listen(5)
+   print('SERVER: Sockets prepared and ready.')
 
-def send():
+   FORMAT = pyaudio.paInt16
+   CHANNELS = 1
+   RATE = 44100
+   CHUNK = 4096
+
+   audio = pyaudio.PyAudio()
+
+   def callback(in_data, frame_count, time_info, status):
+    for s in read_list[1:]:
+        s.send(in_data)
+    return (None, pyaudio.paContinue)
+
+   # start Recording
+   stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK, stream_callback=callback)
+   # stream.start_stream()
+
+   read_list = [serversocket]
+   print ("Sending Audio Data...")
+
+   try:
     while True:
-        sound = my_aud_msg.read(CHUNK) #read from stream
-        #sound_arr = array('h',sound)create array of the read data    
-        client_socket.sendall(sound)         
-
-def receive():
-    while True:
-        databytes = b''
-        size = len(databytes)
-        while  size != Buffersize: 
-            if( (Buffersize-len(databytes)) > (4 * CHUNK)): #if databytes have nothing in it read and store
-                databytes += client_socket.recv(Buffersize)
+        readable, writable, errored = select.select(read_list, [], [])
+        for s in readable:
+            if s is serversocket:
+                (clientsocket, address) = serversocket.accept()
+                read_list.append(clientsocket)
+                print ("Sending Audio: Active")
             else:
-                databytes += client_socket.recv(Buffersize-len(databytes)) #read and append remaining  data 
+                data = s.recv(1024)
+                if not data:
+                    read_list.remove(s)
+   except KeyboardInterrupt:
+    pass
+   
+   print ("finished recording")
+  
+   serversocket.close()
+   # stop Recording
+   stream.stop_stream()
+   stream.close()
+   audio.terminate()
 
-        my_aud_msg.write(sound) #play the sound
+def client(HOST, PORT):
+  print("CLIENT Starting...")
+  FORMAT = pyaudio.paInt16
+  CHANNELS = 1
+  RATE = 44100
+  CHUNK = 4096
 
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((HOST, PORT))
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+  s.connect((HOST,PORT))
+  audio = pyaudio.PyAudio()
+  stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True, frames_per_buffer=CHUNK)
+  print("Playing...")
 
-aud = pyaudio.PyAudio()
-my_aud_msg = aud.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
+  try:
+    while True:
+        data = s.recv(CHUNK)
+        stream.write(data)
+  except KeyboardInterrupt:
+    pass
 
-#create threads for sending and receiving 
+  print('Shutting down')
+  s.close()
+  stream.close()
+  audio.terminate()
 
-send_sound_thread = Thread(target=send)
-send_sound_thread.start()
-recv_sound_thread = Thread(target = receive)
-recv_sound_thread.start()
+print("YOU ARE THE MAIN HOST!")
+HOST = input("Enter Your Server IP:\n")        # check ipconfig for an available local iPV4 address
+HOST2 = input("Enter Client IP ADDRESS:\n")        # check ipconfig for an available local iPV4 address
+
+PORT = 9898
+PORT2 = 8787
+PORTAS = 9899
+PORTAC = 8788
 
 
+#MULTITHREADING PART (SERVER THEN CLIENT)
+
+t = Thread(target=server, args=(HOST,PORT))
+t.daemon = True
+t.start()
+
+
+client(HOST2,PORT2)
+    
 
 
 
