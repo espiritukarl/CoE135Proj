@@ -92,8 +92,6 @@ def chat_handler(client):
     # handles the clients
     name = client.recv(BUFSIZ).decode("utf8")
     welcome = 'Welcome to the chatroom %s! Type {quit} if you want to exit.' % name
-    if not name:
-        client.close()
     client.send(bytes(welcome, "utf8"))
     msg = "%s has joined the chat!" % name
     broadcast(bytes(msg, "utf8"))
