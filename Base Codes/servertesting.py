@@ -142,7 +142,6 @@ addresses = {} #for chat
 addresses2 = {} #for audio
 
 HOST = input("Enter Host IP\n") #for server
-HOST2 = '127.0.0.1' #for client w/in server
 PORT = 33000
 PORT2 = 9898
 
@@ -155,8 +154,6 @@ CHUNK=1024
 
 ADDR = (HOST, PORT) #tupple for server chatroom
 ADDR1 = (HOST, PORT2) #tupple for server audio
-ADDR2 = (HOST2, PORT) #tupple for client w/in server chatroom
-ADDR3 = (HOST2, PORT2) #tupple for client w/in server audio
 
 SERVER = socket(AF_INET, SOCK_STREAM) #chatroom
 SERVER.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
@@ -175,11 +172,11 @@ if __name__ == "__main__":
     
     client_socket = socket(AF_INET, SOCK_STREAM)
     client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    client_socket.connect(ADDR2)
+    client_socket.connect(ADDR)
     
     clientaudio_socket = socket(AF_INET, SOCK_STREAM)
     clientaudio_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
-    clientaudio_socket.connect(ADDR3)
+    clientaudio_socket.connect(ADDR1)
 
     audio=pyaudio.PyAudio()
     stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
