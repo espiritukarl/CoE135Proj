@@ -1,6 +1,5 @@
-# Version 1.00 testing audio w/ chatroom
-# things to fix: disconnect audio in sync w/ chatroom, add video!
-# test audio if it's 2 way as well
+# Version 1.10 testing audio w/ chatroom
+# things to fix: disconnect audio in sync w/ chatroom, add video! timeouts on other machines for some odd reason
 
 from socket import AF_INET, socket, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from threading import Thread
