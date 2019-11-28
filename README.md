@@ -11,11 +11,11 @@ Week 0: Accessing the PC Camera using OpenCV library
 Week 1: Sending of camera stream data through Sockets. (1-sided video-only communication)  
 Week 2: Implementation of Multi-threading and Syncronization to make a 1-1 video-only communication.  
 Week 3: Integrating Audio Stream sending to make a 1-1 Video-Audio Communication (Unstable)  
-Week 4: Stable One-to-one Video Communication with One-sided Audio Communication (Client hears the Host). Chatbox implemented. 
-Week 5: One-to-many Video Communication. Synchronized Audio+Chatroom Communication (One to Many).
+Week 4: Stable One-to-one Video Communication with One-sided Audio Communication (Client hears the Host). Chatbox implemented.  
+Week 5: One-to-one (maybe one-to-many, needs to be tested) Video-Audio-Chatroom Communication synced. [Working Client-Server](https://github.com/espiritukarl/CoE135Proj/tree/master/Week3)
 
 ## Things to Implement:  
-- Video synchronized with Audio+Chatroom  
 - Proper disconnection handling  
-- Synchronized disconnection
+- Synchronized disconnection  
+- Test One-to-Many connection
 - Test when a client disconnects can others enter  
