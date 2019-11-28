@@ -1,9 +1,9 @@
 # Version 1.10 testing audio w/ chatroom
 # things to fix: disconnect audio in sync w/ chatroom, add video! timeouts on other machines for some odd reason
 
-from socket import AF_INET, socket, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from threading import Thread
 from array import array
+import socket
 import pyaudio
 import tkinter
 
@@ -89,12 +89,6 @@ def broadcastSound(clientSocket, data_to_be_sent):
 def SendAudio():
     while True:
         data = stream.read(CHUNK)
-        dataChunk = array('h', data)
-        vol = max(dataChunk)
-        #if(vol > 500):
-        #    print("Recording Sound...")
-        #else:
-        #    print("Silence..")
         clientaudio_socket.sendall(data)
 
 def RecieveAudio():
@@ -154,12 +148,12 @@ CHUNK=1024
 ADDR = (HOST, PORT) #tupple for server chatroom
 ADDR1 = (HOST, PORT2) #tupple for server audio
 
-SERVER = socket(AF_INET, SOCK_STREAM) #chatroom
-SERVER.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+SERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #chatroom
+SERVER.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 SERVER.bind(ADDR)
 
-ASERVER = socket(AF_INET, SOCK_STREAM) #audio
-ASERVER.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+ASERVER = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #audio
+ASERVER.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 ASERVER.bind(ADDR1)
 
 if __name__ == "__main__":
@@ -169,12 +163,12 @@ if __name__ == "__main__":
     ACCEPT_THREAD = Thread(target=accept_connections)
     ACCEPT_THREAD.start()
     
-    client_socket = socket(AF_INET, SOCK_STREAM)
-    client_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     client_socket.connect(ADDR)
     
-    clientaudio_socket = socket(AF_INET, SOCK_STREAM)
-    clientaudio_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    clientaudio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientaudio_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     clientaudio_socket.connect(ADDR1)
 
     audio=pyaudio.PyAudio()
