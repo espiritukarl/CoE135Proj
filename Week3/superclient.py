@@ -1,18 +1,11 @@
-# SUPERCLIENT 1.30
+# SUPERCLIENT 1.40
 # PURE CLIENT. NO SERVER INCLUDED.
-# AUDIO INCLUDED - ONE WAY ONLY
-# SEPARATED INTO WEEK3 
-# added Chatroom
+# VIDEO AUDIO CHATROOM SYNCED
 
-import threading
 from threading import Thread
-import time
 import cv2
-import io
 import socket
-import sys
 import struct
-import time
 import pickle
 import tkinter
 import pyaudio
@@ -21,7 +14,7 @@ def client1(HOST, PORT): #sends the data to server
   print("CLIENT1: Starting...")
   client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   client_socket.connect((HOST, PORT))
-  connection = client_socket.makefile('wb')
+  #connection = client_socket.makefile('wb')
 
   cam = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
 
@@ -56,7 +49,7 @@ def client2(HOST2, PORT2):   #receives data from server
     print("CLIENT2: Starting...")
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((HOST2, PORT2))
-    connection = client_socket.makefile('wb')
+    #connection = client_socket.makefile('wb')
 
     data = b""
     payload_size = struct.calcsize(">L")
@@ -129,29 +122,52 @@ def client4(HOST4,PORT4):
         data = stream4.read(CHUNK)
         client_socket.send(data)
 
-# for chat:
+#for chatroom:
 def receive():
     # Handles receiving of messages
     while True:
         try:
-            msg = chat_client_socket.recv(BUFFSIZ).decode("utf8")
+            msg = client_socket.recv(BUFSIZ).decode("utf8")
             msg_list.insert(tkinter.END, msg)
         except OSError:  # Possibly client has left the chat.
             break
-            
+
 def send(event=None):  # event is for tkinter
     # handles sending of messages
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
-    chat_client_socket.send(bytes(msg, "utf8"))
+    client_socket.send(bytes(msg, "utf8"))
     if msg == "{quit}":
-        chat_client_socket.close()
+        client_socket.close()
         top.destroy()
-        
+
 def on_closing(event=None):
     # for closing of window
     my_msg.set("{quit}")
     send()
+#end of chatroom
+
+#for audio
+def SendAudio():
+    while True:
+        data = stream.read(CHUNK)
+        clientaudio_socket.sendall(data)
+
+def RecieveAudio():
+    while True:
+        data = recvall(BUFSIZ2)
+        stream.write(data)
+
+def recvall(size):
+    databytes = b''
+    while len(databytes) != size:
+        to_read = size - len(databytes)
+        if to_read > (4 * CHUNK):
+            databytes += clientaudio_socket.recv(4 * CHUNK)
+        else:
+            databytes += clientaudio_socket.recv(to_read)
+    return databytes
+#end of audio
     
 #tkinter GUI shit
 top = tkinter.Tk()
@@ -174,34 +190,56 @@ send_button = tkinter.Button(top, text="Send", command=send)
 send_button.pack()
 
 top.protocol("WM_DELETE_WINDOW", on_closing)
+#end of tkinter
 
 #sockets:
 print("YOU ARE A CLIENT!")
 #HOST = input("Enter HOST IP:\n")        # check ipconfig for an available local iPV4 address
 
-HOST = "192.168.100.6"
+HOST = "127.0.0.1"
 
 PORT  = 1001
 PORT2 = 2001
 PORT3 = 3001
 PORT4 = 4001
+PORT5 = 5001
+PORT6 = 6001
 
-BUFFSIZ = 1024
+BUFSIZ = 1024 #for chat
+BUFSIZ2 = 4096 #for audio
+FORMAT=pyaudio.paInt16
+CHANNELS=2
+RATE=44100
+CHUNK=1024
 
-# for chat room
-chat_client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-chat_client_socket.connect((HOST,PORT))
+ADDR = (HOST, PORT5) #tupple for server chatroom
+ADDR1 = (HOST, PORT6) #tupple for server audio
 
 #MULTITHREADING PART
 t = Thread(target=client1, args=(HOST,PORT ))
 t.start()
 t2 = Thread(target=client2, args=(HOST,PORT2))
 t2.start()
-t3 = Thread(target=client3, args=(HOST,PORT3))
-t3.start()
-t4 = Thread(target=client4, args=(HOST,PORT4))
+#t3 = Thread(target=client3, args=(HOST,PORT3)) audio from previous
+#t3.start()
+#t4 = Thread(target=client4, args=(HOST,PORT4))
 #t4.start()
 
-chat_thread = Thread(target=receive)
-chat_thread.start()
-tkinter.mainloop()
+if __name__ == "__main__":
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.connect(ADDR)
+    
+    clientaudio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientaudio_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    clientaudio_socket.connect(ADDR1)
+
+    audio=pyaudio.PyAudio()
+    stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
+
+    RecieveAudioThread = Thread(target=RecieveAudio).start()
+    SendAudioThread = Thread(target=SendAudio).start()
+
+    receive_thread = Thread(target=receive)
+    receive_thread.start()
+    
+    tkinter.mainloop()
