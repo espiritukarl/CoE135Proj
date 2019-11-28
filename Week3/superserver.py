@@ -2,16 +2,10 @@
 # PURE SERVER. NO CLIENT INCLUDED.
 # VIDEO, AUDIO AND CHAT IS SYNC'D
 
-import threading
 from threading import Thread
-from array import array
-import time
 import cv2
-import io
 import socket
-import sys
 import struct
-import time
 import pickle
 import pyaudio
 import select
@@ -320,7 +314,7 @@ t2 = Thread(target=server2, args=(HOST,PORT2))
 t2.start()
 #t3 = Thread(target=server3, args=(HOST,PORT3)) - PAST AUDIO THREAD
 #t3.start()
-t4 = Thread(target=server4, args=(HOST,PORT4))
+#t4 = Thread(target=server4, args=(HOST,PORT4))
 #t4.start()
 
 if __name__ == "__main__":
