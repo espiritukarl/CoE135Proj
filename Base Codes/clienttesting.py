@@ -1,8 +1,7 @@
 # Version 1.00 testing audio w/ chatroom
 
-from socket import AF_INET, socket, SOCK_STREAM, SOL_SOCKET, SO_REUSEADDR
 from threading import Thread
-from array import array
+import socket
 import pyaudio
 import tkinter
 
@@ -36,12 +35,6 @@ def on_closing(event=None):
 def SendAudio():
     while True:
         data = stream.read(CHUNK)
-        dataChunk = array('h', data)
-        vol = max(dataChunk)
-        #if(vol > 500):
-        #    print("Recording Sound...")
-        #else:
-        #    print("Silence..")
         clientaudio_socket.sendall(data)
 
 def RecieveAudio():
@@ -102,11 +95,11 @@ ADDR = (HOST, PORT) #tupple for server chatroom
 ADDR1 = (HOST, PORT2) #tupple for server audio
 
 if __name__ == "__main__":
-    client_socket = socket(AF_INET, SOCK_STREAM)
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect(ADDR)
     
-    clientaudio_socket = socket(AF_INET, SOCK_STREAM)
-    clientaudio_socket.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+    clientaudio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientaudio_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     clientaudio_socket.connect(ADDR1)
 
     audio=pyaudio.PyAudio()
