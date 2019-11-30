@@ -11,7 +11,7 @@ import tkinter
 import pyaudio
 
 def client1(HOST, PORT): #sends the data to server
-  print("CLIENT1: Starting...")
+  print("CLIENT1 CRAP: Starting...")
   client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
   client_socket.connect((HOST, PORT))
   #connection = client_socket.makefile('wb')
@@ -42,19 +42,14 @@ def client1(HOST, PORT): #sends the data to server
   cam.release()
   cv2.destroyAllWindows()
 
-
-
 # Define a function for the thread
 def client2(HOST2, PORT2):   #receives data from server
     print("CLIENT2: Starting...")
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     client_socket.connect((HOST2, PORT2))
-    #connection = client_socket.makefile('wb')
-
     data = b""
     payload_size = struct.calcsize(">L")
     print("CLIENT2: Starting Camera...")
-    #print("payload_size: {}".format(payload_size))
     while True:
         while len(data) < payload_size:
             #print("Recv: {}".format(len(data)))
@@ -87,7 +82,7 @@ def client3(HOST3,PORT3):
   s3.connect((HOST3,PORT3))
   audio = pyaudio.PyAudio()
   stream3 = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True, frames_per_buffer=CHUNK)
-  print("CLIENT3: Playing...")
+  print("CLIENT3 CRAP: Playing...")
 
   try:
     while True:
@@ -96,31 +91,10 @@ def client3(HOST3,PORT3):
   except KeyboardInterrupt:
     pass
 
-  print('CLIENT3: Shutting down')
   s3.close()
   stream3.close()
   audio.terminate()
 
-def client4(HOST4,PORT4):
-  # Audio
-  CHUNK = 1024 * 4
-  FORMAT = pyaudio.paInt16
-  CHANNELS = 2
-  RATE = 44100
-  p4 = pyaudio.PyAudio()
-  stream4 = p4.open(format=FORMAT,
-                channels=CHANNELS,
-                rate=RATE,
-                input=True,
-                frames_per_buffer=CHUNK)
-
-  print("CLIENT4: Recording")
-
-  with socket.socket() as client_socket:
-    client_socket.connect((HOST, PORT))
-    while True:
-        data = stream4.read(CHUNK)
-        client_socket.send(data)
 
 #for chatroom:
 def receive():
@@ -148,7 +122,7 @@ def on_closing(event=None):
 #end of chatroom
 
 #for audio
-def SendAudio():
+def SendAudio():        #IMPLEMENT PA KAYO NG GANITO PERO PANG 1-1 LANG ITO
     while True:
         data = stream.read(CHUNK)
         clientaudio_socket.sendall(data)
@@ -196,7 +170,7 @@ top.protocol("WM_DELETE_WINDOW", on_closing)
 print("YOU ARE A CLIENT!")
 #HOST = input("Enter HOST IP:\n")        # check ipconfig for an available local iPV4 address
 
-HOST = "127.0.0.1"
+HOST = "127.0.0.1" #MAGLOCALHOST LANG KAYO
 
 PORT  = 1001
 PORT2 = 2001
@@ -220,10 +194,6 @@ t = Thread(target=client1, args=(HOST,PORT ))
 t.start()
 t2 = Thread(target=client2, args=(HOST,PORT2))
 t2.start()
-#t3 = Thread(target=client3, args=(HOST,PORT3)) audio from previous
-#t3.start()
-#t4 = Thread(target=client4, args=(HOST,PORT4))
-#t4.start()
 
 if __name__ == "__main__":
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -18,4 +18,16 @@ Week 5: One-to-one (maybe one-to-many, needs to be tested) Video-Audio-Chatroom 
 - Proper disconnection handling  
 - Synchronized disconnection  
 - Test One-to-Many connection
-- Test when a client disconnects can others enter  
+- Test when a client disconnects can others enter
+
+## Things to Reconsider
+- Participants should have a proper firewall setting
+- Participants should have at least WINDOWS 7/8.1/10 PRO INSTALLED (NOT IN VM)
+- Participants should have at the specific Python 3.6 version installed.
+- Participants must contribute fairly and treat co-participates WELL.
+- Participants must listen to each other instead of INSULTING in the chatroom.
+- Participants MUST HAVE A FAIR AMOUNT OF GITHUB CONTRIBUTIONS FOR THE LAST 5 WEEKS
+- Participants that do not contribute or help must be punished accordingly.
+- Participants with improper behavior be muted from any means ONLINE.
+- PARTICIPANTS should SHOW EFFORT AND DO NOT COME IN CLASS 30 MINS BEFORE DISMISSAL.
+- PARTICIPANTS SHOULD KNOW RESPECT. R-E-S-P-E-C-T

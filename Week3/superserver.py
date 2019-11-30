@@ -24,7 +24,7 @@ def server1(HOST, PORT):    #receives data from client1
 
    data = b""
    payload_size = struct.calcsize(">L")
-   print("SERVER1: Starting Camera...")
+   print("SERVER1 CRAP: Starting Camera...")
 
    while True:
       while len(data) < payload_size:
@@ -49,7 +49,7 @@ def server1(HOST, PORT):    #receives data from client1
          break
 
 def server2(HOST2, PORT2):    #sends data to client2
-    print("SERVER2: Starting...")
+    print("SERVER2 CRAP: Starting...")
     s2=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     s2.bind((HOST2,PORT2))
     s2.listen(10)
@@ -68,84 +68,9 @@ def server2(HOST2, PORT2):    #sends data to client2
         result, frame2 = cv2.imencode('.jpg', frame2, encode_param2)
         data2 = pickle.dumps(frame2, 0)
         size2 = len(data2)
-        #print("{}: {}".format(img_counter2, size2))
         conn2.sendall(struct.pack(">L", size2) + data2)
         img_counter2 += 1
     cam2.release()
-
-def server3(HOST3,PORT3): #sends audio to client
-  print("SERVER3 (S/AUDIO): Waiting for client...")
-  FORMAT = pyaudio.paInt16
-  CHANNELS = 1
-  RATE = 44100
-  CHUNK = 4096
-  audio = pyaudio.PyAudio()
-
-  serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  serversocket.bind((HOST3, PORT3))
-  serversocket.listen(10)
-
-  def callback(in_data, frame_count, time_info, status):
-    for s in read_list[1:]:
-        s.send(in_data)
-    return (None, pyaudio.paContinue)
-
-  # start Recording
-  stream = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK, stream_callback=callback)
-  # stream.start_stream()
-
-  read_list = [serversocket]
-  print ("SERVER3: Recording...")
-
-  try:
-    while True:
-        readable, writable, errored = select.select(read_list, [], [])
-        for s in readable:
-            if s is serversocket:
-                (clientsocket, address) = serversocket.accept()
-                read_list.append(clientsocket)
-                print ("Connection from", address)
-            else:
-                data = s.recv(1024)
-                if not data:
-                    read_list.remove(s)
-  except KeyboardInterrupt:
-    pass
-
-  print ("Finished recording")
-  serversocket.close()
-  # stop Recording
-  stream.stop_stream()
-  stream.close()
-  audio.terminate()
-
-def server4(HOST4,PORT4): #plays the client's audio
-  print("SERVER4 (R/AUDIO): Waiting for client...")
-  p2 = pyaudio.PyAudio()
-  CHUNK2 = 1024 * 4
-  FORMAT2 = pyaudio.paInt16
-  CHANNELS2 = 2
-  RATE2 = 44100
-  stream2 = p2.open(format=FORMAT2,
-                channels=CHANNELS2,
-                rate=RATE2,
-                output=True,
-                frames_per_buffer=CHUNK2)
-
-  with socket.socket() as server_socket2:
-    server_socket2.bind((HOST4, PORT4))
-    server_socket2.listen(1)
-    conn2, address2 = server_socket2.accept()
-    print("Connection from " + address2[0] + ":" + str(address2[1]))
-
-    data2 = conn2.recv(4096)
-    while data2 != "":
-        data2 = conn2.recv(4096)
-        stream2.write(data2)
-
-  stream2.stop_stream()
-  stream2.close()
-  p2.terminate()
 
 # for chatroom & audio:
 def accept_connections():
@@ -268,12 +193,9 @@ send_button = tkinter.Button(top, text="Send", command=send)
 send_button.pack()
 
 top.protocol("WM_DELETE_WINDOW", on_closing)
-#end of tkinter
 
 #sockets:
 print("YOU ARE THE MAIN HOST!")
-#HOST = input("Enter Your Server IP:\n")        # check ipconfig for an available local iPV4 address
-#HOST2 = input("Enter Client IP ADDRESS:\n")        # check ipconfig for an available local iPV4 address
 
 
 clients = {} #for chat
@@ -312,10 +234,6 @@ t = Thread(target=server1, args=(HOST,PORT ))
 t.start()
 t2 = Thread(target=server2, args=(HOST,PORT2))
 t2.start()
-#t3 = Thread(target=server3, args=(HOST,PORT3)) - PAST AUDIO THREAD
-#t3.start()
-#t4 = Thread(target=server4, args=(HOST,PORT4))
-#t4.start()
 
 if __name__ == "__main__":
     SERVER.listen(5)
@@ -335,7 +253,7 @@ if __name__ == "__main__":
     audio=pyaudio.PyAudio()
     stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
 
-    RecieveAudioThread = Thread(target=RecieveAudio).start()
+    RecieveAudioThread = Thread(target=RecieveAudio).start() #MALI PA SPELLING
     SendAudioThread = Thread(target=SendAudio).start()
 
     receive_thread = Thread(target=receive)
