@@ -1,6 +1,7 @@
-# SUPERSERVER 1.40
+# SUPERSERVER 1.50
 # PURE SERVER. NO CLIENT INCLUDED.
 # VIDEO, AUDIO AND CHAT IS SYNC'D
+# DISCONNECTION HANDLING FOR AUDIO&CHATROOM
 
 from threading import Thread
 import cv2
@@ -8,23 +9,21 @@ import socket
 import struct
 import pickle
 import pyaudio
-import select
 import tkinter
 
 
-# Define a function for the thread
 def server1(HOST, PORT):    #receives data from client1
-   print('SERVER1: Preparing sockets for connection...')
+   print('SERVER1: Starting... (Preparing Sockets for Receiving VData)')
    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
    s.bind((HOST,PORT))
    s.listen(10)
-   print('SERVER1: Sockets prepared and ready.')
+   #print('SERVER1: Sockets prepared and ready.')
 
    conn,addr=s.accept()
 
    data = b""
    payload_size = struct.calcsize(">L")
-   print("SERVER1 CRAP: Starting Camera...")
+   print("SERVER1: Connected! Launching Camera Window...")
 
    while True:
       while len(data) < payload_size:
@@ -46,10 +45,11 @@ def server1(HOST, PORT):    #receives data from client1
       cv2.imshow("Friend Camera",frame)
 
       if cv2.waitKey(1) & 0xFF == ord('q'):   #press q on window to stop
+         send()
          break
 
 def server2(HOST2, PORT2):    #sends data to client2
-    print("SERVER2 CRAP: Starting...")
+    print("SERVER2: Starting... (Preparing Sockets for Sending VData)")
     s2=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     s2.bind((HOST2,PORT2))
     s2.listen(10)
@@ -60,30 +60,41 @@ def server2(HOST2, PORT2):    #sends data to client2
     cam2 = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
     cam2.set(3, 640)
     cam2.set(4, 480)
-
+    print("SERVER2: Sending VData to Client...")
     img_counter2 = 0
     encode_param2 = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
     while True:
         ret2, frame2 = cam2.read()
+        cv2.imshow('SELF_CAMERA',frame2)
         result, frame2 = cv2.imencode('.jpg', frame2, encode_param2)
         data2 = pickle.dumps(frame2, 0)
         size2 = len(data2)
+        #print("{}: {}".format(img_counter2, size2))
         conn2.sendall(struct.pack(">L", size2) + data2)
         img_counter2 += 1
+        
+        if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
+            send()
+            break
+        
     cam2.release()
+    s2.close()
 
 # for chatroom & audio:
 def accept_connections():
     # accepts incoming clients
     while True:
-        client, addr = SERVER.accept()
-        client2, addr2 = ASERVER.accept()
-        print("%s:%s has connected." % addr)
-        client.send(bytes("Type your name and press 'Enter'!", "utf8"))
-        addresses[client] = addr
-        addresses2[client2] = addr2
-        Thread(target=handler, args=(client,)).start()
-        Thread(target=ClientConnectionSound, args=(client2, )).start()
+        try:
+            client, addr = SERVER.accept()
+            client2, addr2 = ASERVER.accept()
+            print("%s:%s has connected." % addr)
+            client.send(bytes("Type your name and press 'Enter'!", "utf8"))
+            addresses[client] = addr
+            addresses2[client2] = addr2
+            Thread(target=handler, args=(client,)).start()
+            Thread(target=ClientConnectionSound, args=(client2, )).start()
+        except OSError:
+            continue
 
 #for chatroom:
 def handler(client):
@@ -126,9 +137,15 @@ def send(event=None):  # event is for tkinter
     # handles sending of messages
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
-    client_socket.send(bytes(msg, "utf8"))
+    try:
+        client_socket.send(bytes(msg, "utf8"))
+    except OSError:
+        pass
     if msg == "{quit}":
+        SERVER.close()
+        ASERVER.close()
         client_socket.close()
+        clientaudio_socket.close()
         top.destroy()
 
 def on_closing(event=None):
@@ -153,22 +170,31 @@ def broadcastSound(clientSocket, data_to_be_sent):
 
 def SendAudio():
     while True:
-        data = stream.read(CHUNK)
-        clientaudio_socket.sendall(data)
+        try:
+            data = stream.read(CHUNK)
+            clientaudio_socket.sendall(data)
+        except OSError:
+            continue
 
 def RecieveAudio():
     while True:
-        data = recvall(BUFSIZ2)
-        stream.write(data)
+        try:
+            data = recvall(BUFSIZ2)
+            stream.write(data)
+        except OSError:
+            continue
 
 def recvall(size):
     databytes = b''
     while len(databytes) != size:
-        to_read = size - len(databytes)
-        if to_read > (4 * CHUNK):
-            databytes += clientaudio_socket.recv(4 * CHUNK)
-        else:
-            databytes += clientaudio_socket.recv(to_read)
+        try:
+            to_read = size - len(databytes)
+            if to_read > (4 * CHUNK):
+                databytes += clientaudio_socket.recv(4 * CHUNK)
+            else:
+                databytes += clientaudio_socket.recv(to_read)
+        except OSError:
+            continue
     return databytes
 #end of audio
 
@@ -193,16 +219,19 @@ send_button = tkinter.Button(top, text="Send", command=send)
 send_button.pack()
 
 top.protocol("WM_DELETE_WINDOW", on_closing)
+#end of tkinter
 
 #sockets:
 print("YOU ARE THE MAIN HOST!")
+#HOST = input("Enter Your Server IP:\n")        # check ipconfig for an available local iPV4 address
+#HOST2 = input("Enter Client IP ADDRESS:\n")        # check ipconfig for an available local iPV4 address
 
 
 clients = {} #for chat
 addresses = {} #for chat
 addresses2 = {} #for audio
 
-HOST = "192.168.100.6"
+HOST = "127.0.0.1"
 PORT  = 1001
 PORT2 = 2001
 PORT3 = 3001
@@ -234,6 +263,10 @@ t = Thread(target=server1, args=(HOST,PORT ))
 t.start()
 t2 = Thread(target=server2, args=(HOST,PORT2))
 t2.start()
+#t3 = Thread(target=server3, args=(HOST,PORT3)) - PAST AUDIO THREAD
+#t3.start()
+#t4 = Thread(target=server4, args=(HOST,PORT4))
+#t4.start()
 
 if __name__ == "__main__":
     SERVER.listen(5)
@@ -253,7 +286,7 @@ if __name__ == "__main__":
     audio=pyaudio.PyAudio()
     stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
 
-    RecieveAudioThread = Thread(target=RecieveAudio).start() #MALI PA SPELLING
+    RecieveAudioThread = Thread(target=RecieveAudio).start()
     SendAudioThread = Thread(target=SendAudio).start()
 
     receive_thread = Thread(target=receive)
