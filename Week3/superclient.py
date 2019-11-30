@@ -44,7 +44,6 @@ def client1(HOST, PORT): #sends the data to server
             break
 
         if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
-            send()
             break
 
     cam.release()
@@ -95,53 +94,6 @@ def client2(HOST2, PORT2):   #receives data from server
 
     client_socket.close()
 
-'''
-def client3(HOST3,PORT3):
-  FORMAT = pyaudio.paInt16
-  CHANNELS = 1
-  RATE = 44100
-  CHUNK = 4096
-
-  s3 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  s3.connect((HOST3,PORT3))
-  audio = pyaudio.PyAudio()
-  stream3 = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True, frames_per_buffer=CHUNK)
-  print("CLIENT3: Playing...")
-
-  try:
-    while True:
-        data3 = s3.recv(CHUNK)
-        stream3.write(data3)
-  except KeyboardInterrupt:
-    pass
-
-  print('CLIENT3: Shutting down')
-  s3.close()
-  stream3.close()
-  audio.terminate()
-
-def client4(HOST4,PORT4):
-  # Audio
-  CHUNK = 1024 * 4
-  FORMAT = pyaudio.paInt16
-  CHANNELS = 2
-  RATE = 44100
-  p4 = pyaudio.PyAudio()
-  stream4 = p4.open(format=FORMAT,
-                channels=CHANNELS,
-                rate=RATE,
-                input=True,
-                frames_per_buffer=CHUNK)
-
-  print("CLIENT4: Recording")
-
-  with socket.socket() as client_socket:
-    client_socket.connect((HOST, PORT))
-    while True:
-        data = stream4.read(CHUNK)
-        client_socket.send(data)
-'''
-
 #for chatroom:
 def receive():
     # Handles receiving of messages
@@ -154,13 +106,19 @@ def receive():
 
 def send(event=None):  # event is for tkinter
     # handles sending of messages
-    msg = my_msg.get()
-    my_msg.set("")  # Clears input field.
-    client_socket.send(bytes(msg, "utf8"))
-    if msg == "{quit}":
-        client_socket.close()
-        clientaudio_socket.close()
-        top.destroy()
+    try:
+        msg = my_msg.get()
+        my_msg.set("")  # Clears input field.
+        client_socket.send(bytes(msg, "utf8"))
+        if msg == "{quit}":
+            client_socket.close()
+            clientaudio_socket.close()
+            top.destroy()
+            
+            print("SERVER HAS CLOSED")
+            raise SystemExit
+    except OSError:
+        pass
 
 def on_closing(event=None):
     # for closing of window
@@ -175,7 +133,7 @@ def SendAudio():
             data = stream.read(CHUNK)
             clientaudio_socket.sendall(data)
         except OSError:
-            continue
+            break
 
 def ReceiveAudio():
     while True:
@@ -183,7 +141,7 @@ def ReceiveAudio():
             data = recvall(BUFSIZ2)
             stream.write(data)
         except OSError:
-            continue
+            break
 
 def recvall(size):
     databytes = b''
@@ -232,8 +190,8 @@ PORT  = 1001
 PORT2 = 2001
 PORT3 = 3001
 PORT4 = 4001
-PORT5 = 5001
-PORT6 = 6001
+PORT5 = 5001 #for chat
+PORT6 = 6001 #for audio
 
 BUFSIZ = 1024 #for chat
 BUFSIZ2 = 4096 #for audio
@@ -250,10 +208,6 @@ t = Thread(target=client1, args=(HOST,PORT ))
 t.start()
 t2 = Thread(target=client2, args=(HOST,PORT2))
 t2.start()
-#t3 = Thread(target=client3, args=(HOST,PORT3))
-#t3.start()
-#t4 = Thread(target=client4, args=(HOST,PORT4))
-#t4.start()
 
 if __name__ == "__main__":
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -264,16 +218,18 @@ if __name__ == "__main__":
     try:
         client_socket.connect(ADDR)
         clientaudio_socket.connect(ADDR1)
+        audio=pyaudio.PyAudio()
+        stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
+
+        ReceiveAudioThread = Thread(target=ReceiveAudio).start()
+        SendAudioThread = Thread(target=SendAudio).start()
+
+        receive_thread = Thread(target=receive)
+        receive_thread.start()
+    
+        tkinter.mainloop()
+        
     except OSError:
         print("SERVER IS CLOSED. CLIENT FAILED TO START.")
         
-    audio=pyaudio.PyAudio()
-    stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
-
-    ReceiveAudioThread = Thread(target=ReceiveAudio).start()
-    SendAudioThread = Thread(target=SendAudio).start()
-
-    receive_thread = Thread(target=receive)
-    receive_thread.start()
     
-    tkinter.mainloop()
