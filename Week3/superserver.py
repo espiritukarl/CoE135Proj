@@ -1,4 +1,4 @@
-# SUPERSERVER 1.50
+# SUPERSERVER 1.51
 # PURE SERVER. NO CLIENT INCLUDED.
 # VIDEO, AUDIO AND CHAT IS SYNC'D
 # DISCONNECTION HANDLING FOR AUDIO&CHATROOM
@@ -74,7 +74,6 @@ def server2(HOST2, PORT2):    #sends data to client2
         img_counter2 += 1
         
         if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
-            send()
             break
         
     cam2.release()
@@ -101,23 +100,24 @@ def handler(client):
     # handles the clients
     name = client.recv(BUFSIZ).decode("utf8")
     welcome = 'Welcome to the chatroom %s! Type {quit} if you want to exit.' % name
-    client.send(bytes(welcome, "utf8"))
-    msg = "%s has joined the chat!" % name
-    broadcast(bytes(msg, "utf8"))
-    clients[client] = name
-    
-    while True:
-        msg = client.recv(BUFSIZ)
-        if msg.decode("utf8") != "{quit}":
-            print(name + ": " + msg.decode("utf8"))
-            broadcast(msg, name+": ")
-        else:
-            #client.send(bytes("{quit}", "utf8"))
-            #client.close()
-            print(name + " has disconnected.")
-            del clients[client]
-            broadcast(bytes("%s has left the chat." % name, "utf8"))
-            break
+    try:
+        client.send(bytes(welcome, "utf8"))
+        msg = "%s has joined the chat!" % name
+        broadcast(bytes(msg, "utf8"))
+        clients[client] = name
+        
+        while True:
+            msg = client.recv(BUFSIZ)
+            if msg.decode("utf8") != "{quit}":
+                print(name + ": " + msg.decode("utf8"))
+                broadcast(msg, name+": ")
+            else:
+                print(name + " has disconnected.")
+                del clients[client]
+                broadcast(bytes("%s has left the chat." % name, "utf8"))
+                break
+    except:
+        pass
 
 def broadcast(msg, prefix=""):  # prefix is for name identification.
     # show message to clients
@@ -130,23 +130,26 @@ def receive():
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
             msg_list.insert(tkinter.END, msg)
-        except OSError:  # Possibly client has left the chat.
+        except:  # Possibly client has left the chat.
             break
 
 def send(event=None):  # event is for tkinter
     # handles sending of messages
-    msg = my_msg.get()
-    my_msg.set("")  # Clears input field.
     try:
+        msg = my_msg.get()
+        my_msg.set("")  # Clears input field.
         client_socket.send(bytes(msg, "utf8"))
+        if msg == "{quit}":
+            SERVER.close()
+            ASERVER.close()
+            client_socket.close()
+            clientaudio_socket.close()
+            top.destroy()
+            
+            print("SERVER HAS CLOSED")
+            raise SystemExit
     except OSError:
         pass
-    if msg == "{quit}":
-        SERVER.close()
-        ASERVER.close()
-        client_socket.close()
-        clientaudio_socket.close()
-        top.destroy()
 
 def on_closing(event=None):
     # for closing of window
@@ -194,7 +197,7 @@ def recvall(size):
             else:
                 databytes += clientaudio_socket.recv(to_read)
         except OSError:
-            continue
+            break
     return databytes
 #end of audio
 
@@ -263,10 +266,6 @@ t = Thread(target=server1, args=(HOST,PORT ))
 t.start()
 t2 = Thread(target=server2, args=(HOST,PORT2))
 t2.start()
-#t3 = Thread(target=server3, args=(HOST,PORT3)) - PAST AUDIO THREAD
-#t3.start()
-#t4 = Thread(target=server4, args=(HOST,PORT4))
-#t4.start()
 
 if __name__ == "__main__":
     SERVER.listen(5)
