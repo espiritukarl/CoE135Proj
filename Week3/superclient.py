@@ -1,6 +1,6 @@
 # SUPERCLIENT 1.40
 # PURE CLIENT. NO SERVER INCLUDED.
-# VIDEO AUDIO CHATROOM SYNCED
+# PROPER DISCONNECTION HANDLNIG FOR AUDIO&CHATROOM
 
 from threading import Thread
 import cv2
@@ -11,67 +11,91 @@ import tkinter
 import pyaudio
 
 def client1(HOST, PORT): #sends the data to server
-  print("CLIENT1 CRAP: Starting...")
-  client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  client_socket.connect((HOST, PORT))
-  #connection = client_socket.makefile('wb')
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((HOST, PORT))
+        print("CLIENT1: Starting...")
+    except OSError:
+        pass
+    #connection = client_socket.makefile('wb')
 
-  cam = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
+    cam = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
 
-  cam.set(3, 640)
-  cam.set(4, 480)
+    cam.set(3, 640)
+    cam.set(4, 480)
 
-  img_counter = 0
+    img_counter = 0
 
-  encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
 
-  while True:
-    ret, frame = cam.read()
-    result, frame = cv2.imencode('.jpg', frame, encode_param)
-    #data = zlib.compress(pickle.dumps(frame, 0))
-    data = pickle.dumps(frame, 0)
-    size = len(data)
+    while True:
+        ret, frame = cam.read()
+        result, frame = cv2.imencode('.jpg', frame, encode_param)
+        cv2.imshow('SELF CAMERA',frame)
+        #data = zlib.compress(pickle.dumps(frame, 0))
+        data = pickle.dumps(frame, 0)
+        size = len(data)
 
-    #print("{}: {}".format(img_counter, size))
-    client_socket.sendall(struct.pack(">L", size) + data)
-    img_counter += 1
+        #print("{}: {}".format(img_counter, size))
+        try:
+            client_socket.sendall(struct.pack(">L", size) + data)
+            img_counter += 1
+        except OSError:
+            break
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
-      break
+        if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
+            send()
+            break
 
-  cam.release()
-  cv2.destroyAllWindows()
+    cam.release()
+    cv2.destroyAllWindows()
+    client_socket.close()
 
 # Define a function for the thread
 def client2(HOST2, PORT2):   #receives data from server
-    print("CLIENT2: Starting...")
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((HOST2, PORT2))
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((HOST2, PORT2))
+        print("CLIENT2: Starting...")
+    except OSError:
+        pass
+    #connection = client_socket.makefile('wb')
+
     data = b""
     payload_size = struct.calcsize(">L")
-    print("CLIENT2: Starting Camera...")
+    #print("payload_size: {}".format(payload_size))
     while True:
         while len(data) < payload_size:
             #print("Recv: {}".format(len(data)))
-            data += client_socket.recv(4096)
+            try:
+                data += client_socket.recv(4096)
+            except OSError:
+                break
 
         #print("Done Recv: {}".format(len(data)))
         packed_msg_size = data[:payload_size]
         data = data[payload_size:]
-        msg_size = struct.unpack(">L", packed_msg_size)[0]
+        try:
+            msg_size = struct.unpack(">L", packed_msg_size)[0]
+            while len(data) < msg_size:
+                data += client_socket.recv(4096)
+            frame_data = data[:msg_size]
+            data = data[msg_size:]
+            
+            frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
+            frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
+            cv2.imshow('Host Camera',frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
+                send()
+                break
+
+        except:
+            pass
         #print("msg_size: {}".format(msg_size))
-        while len(data) < msg_size:
-            data += client_socket.recv(4096)
-        frame_data = data[:msg_size]
-        data = data[msg_size:]
 
-        frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
-        frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
-        cv2.imshow('Host Camera',frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
-          break
+    client_socket.close()
 
-
+'''
 def client3(HOST3,PORT3):
   FORMAT = pyaudio.paInt16
   CHANNELS = 1
@@ -82,7 +106,7 @@ def client3(HOST3,PORT3):
   s3.connect((HOST3,PORT3))
   audio = pyaudio.PyAudio()
   stream3 = audio.open(format=FORMAT, channels=CHANNELS, rate=RATE, output=True, frames_per_buffer=CHUNK)
-  print("CLIENT3 CRAP: Playing...")
+  print("CLIENT3: Playing...")
 
   try:
     while True:
@@ -91,10 +115,32 @@ def client3(HOST3,PORT3):
   except KeyboardInterrupt:
     pass
 
+  print('CLIENT3: Shutting down')
   s3.close()
   stream3.close()
   audio.terminate()
 
+def client4(HOST4,PORT4):
+  # Audio
+  CHUNK = 1024 * 4
+  FORMAT = pyaudio.paInt16
+  CHANNELS = 2
+  RATE = 44100
+  p4 = pyaudio.PyAudio()
+  stream4 = p4.open(format=FORMAT,
+                channels=CHANNELS,
+                rate=RATE,
+                input=True,
+                frames_per_buffer=CHUNK)
+
+  print("CLIENT4: Recording")
+
+  with socket.socket() as client_socket:
+    client_socket.connect((HOST, PORT))
+    while True:
+        data = stream4.read(CHUNK)
+        client_socket.send(data)
+'''
 
 #for chatroom:
 def receive():
@@ -113,6 +159,7 @@ def send(event=None):  # event is for tkinter
     client_socket.send(bytes(msg, "utf8"))
     if msg == "{quit}":
         client_socket.close()
+        clientaudio_socket.close()
         top.destroy()
 
 def on_closing(event=None):
@@ -122,24 +169,33 @@ def on_closing(event=None):
 #end of chatroom
 
 #for audio
-def SendAudio():        #IMPLEMENT PA KAYO NG GANITO PERO PANG 1-1 LANG ITO
+def SendAudio():
     while True:
-        data = stream.read(CHUNK)
-        clientaudio_socket.sendall(data)
+        try:
+            data = stream.read(CHUNK)
+            clientaudio_socket.sendall(data)
+        except OSError:
+            continue
 
-def RecieveAudio():
+def ReceiveAudio():
     while True:
-        data = recvall(BUFSIZ2)
-        stream.write(data)
+        try:
+            data = recvall(BUFSIZ2)
+            stream.write(data)
+        except OSError:
+            continue
 
 def recvall(size):
     databytes = b''
     while len(databytes) != size:
-        to_read = size - len(databytes)
-        if to_read > (4 * CHUNK):
-            databytes += clientaudio_socket.recv(4 * CHUNK)
-        else:
-            databytes += clientaudio_socket.recv(to_read)
+        try:
+            to_read = size - len(databytes)
+            if to_read > (4 * CHUNK):
+                databytes += clientaudio_socket.recv(4 * CHUNK)
+            else:
+                databytes += clientaudio_socket.recv(to_read)
+        except OSError:
+            continue
     return databytes
 #end of audio
     
@@ -170,7 +226,7 @@ top.protocol("WM_DELETE_WINDOW", on_closing)
 print("YOU ARE A CLIENT!")
 #HOST = input("Enter HOST IP:\n")        # check ipconfig for an available local iPV4 address
 
-HOST = "127.0.0.1" #MAGLOCALHOST LANG KAYO
+HOST = "127.0.0.1"
 
 PORT  = 1001
 PORT2 = 2001
@@ -194,19 +250,27 @@ t = Thread(target=client1, args=(HOST,PORT ))
 t.start()
 t2 = Thread(target=client2, args=(HOST,PORT2))
 t2.start()
+#t3 = Thread(target=client3, args=(HOST,PORT3))
+#t3.start()
+#t4 = Thread(target=client4, args=(HOST,PORT4))
+#t4.start()
 
 if __name__ == "__main__":
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect(ADDR)
-    
+    client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     clientaudio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientaudio_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    clientaudio_socket.connect(ADDR1)
-
+    
+    try:
+        client_socket.connect(ADDR)
+        clientaudio_socket.connect(ADDR1)
+    except OSError:
+        print("SERVER IS CLOSED. CLIENT FAILED TO START.")
+        
     audio=pyaudio.PyAudio()
     stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
 
-    RecieveAudioThread = Thread(target=RecieveAudio).start()
+    ReceiveAudioThread = Thread(target=ReceiveAudio).start()
     SendAudioThread = Thread(target=SendAudio).start()
 
     receive_thread = Thread(target=receive)
