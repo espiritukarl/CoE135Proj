@@ -15,8 +15,8 @@ Week 4: Stable One-to-one Video Communication with One-sided Audio Communication
 Week 5: One-to-one (maybe one-to-many, needs to be tested) Video-Audio-Chatroom Communication synced. [Working Client-Server](https://github.com/espiritukarl/CoE135Proj/tree/master/Week3)
 
 ## Things to Implement:  
-- Proper disconnection handling  
-- Synchronized disconnection  
+- Proper disconnection handling for video (audio&chatroom done)  
+- Synchronized disconnection (audio&chatroom synchronzied but video not yet)
 - Test One-to-Many connection
 - Test when a client disconnects can others enter
 
@@ -28,6 +28,3 @@ Week 5: One-to-one (maybe one-to-many, needs to be tested) Video-Audio-Chatroom 
 - Participants must listen to each other instead of INSULTING in the chatroom.
 - Participants MUST HAVE A FAIR AMOUNT OF GITHUB CONTRIBUTIONS FOR THE LAST 5 WEEKS
 - Participants that do not contribute or help must be punished accordingly.
-- Participants with improper behavior be muted from any means ONLINE.
-- PARTICIPANTS should SHOW EFFORT AND DO NOT COME IN CLASS 30 MINS BEFORE DISMISSAL.
-- PARTICIPANTS SHOULD KNOW RESPECT. R-E-S-P-E-C-T
