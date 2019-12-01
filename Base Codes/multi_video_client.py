@@ -112,7 +112,7 @@ t = Thread(target=client1, args=(HOST, int(my_port) )) #send my video to server
 t.start()
 
 #locate and launch my other receive ports 
-# I receive from 2 other ports thus repeat it 2 times
+#I receive from 2 other ports thus repeat it 2 times
 for portnos in sorted(ports.keys()):
     if ports[portnos] == False:
         ports[portnos] = True # set true since i will already launch a receiving thread

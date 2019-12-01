@@ -14,15 +14,23 @@ import pickle
 import pyaudio
 import select
 
-def server1(HOST, PORT, me ):    #receives data from client1
+def server1(HOST, PORT):    #receives data from client1
    print('SERVER1: Starting... (Preparing Sockets for Receiving VData)')
    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
    s.bind((HOST,PORT))
    s.listen(10)
    #print('SERVER1: Sockets prepared and ready.')
-   #if len(addresses) > 1 thus there are other clients send data to them 
-   conn,addr=s.accept()
+   #if len(addresses) > 1 thus there are other clients send data to them
+   i = 0
+   client={}
+   while ports[PORT] == False:
+         conn,addr = s.accept()
+         client[conn] = addr
+         i = i + 1
 
+   #if i < 3 can still accept connections
+   #conn,addr=s.accept()
+                                                            
    data = b""
    payload_size = struct.calcsize(">L")
    print("SERVER1: Connected! Launching Camera Window...")
@@ -47,15 +55,22 @@ def server1(HOST, PORT, me ):    #receives data from client1
       cv2.imshow("Friend Camera",frame)
       
       if len(addresses) > 1:
-         broadcast(me,data)
-
+         broadcastVideo(conn,data,client) #unsure if dictionary is passable
+      
+      #interrupt sana if meron
+      #if i < 3:
+       #  new,addr = s.accept()
+        # client[new] = addr
+         #i = i + 1
+        
+         
       if cv2.waitKey(1) & 0xFF == ord('q'):   #press q on window to stop
         break
 
 
-def broadcast(clientSocket, data_to_be_sent):
-    for client in addresses:
-        if client != clientSocket:
+def broadcastVideo(clientSocket, data_to_be_sent,client):
+    for conn in client:
+        if conn != clientSocket:
             client.sendall(data_to_be_sent)
 
 
@@ -98,20 +113,27 @@ def ConnectionsUniv(HOSTU,PORTU):
             if ports[port] == False:  #find an open port if False = unused then send it to requesting client 
                 client.sendall(port.encode())
                 ports[port] = True
-
+                #since port is occupied setup a server for receiving end
+                #1 sender per port thus send the assigned socket to a thread a start that thread  
                 if port == '5001':
+                    clients.append[client]
+                    clients1.append[client]
+                    clients2.append[client]
+                    clients3.append[client]
                     #clients, PORTS = accept(port, server1,server2,server3,server4)
                     #Thread(target=ClientConnectionVideo, args=(port, client, clients, PORTS,)).start()
-                    t  = Thread(target=server1, args=(HOST,5001,client))
-                    t.start()
                 if port == '6001':
-                    t2 =Thread(target=server1, args=(HOST, 6001))
-                    t2.start()
+                    clients.append[client]
+                    clients1.append[client]
+                    clients2.append[client]
+                    clients3.append[client]
                     #clients, PORTS = accept(port, server2,server1,server3,server4)
                     #Thread(target=ClientConnectionVideo, args=(port, client, clients, PORTS,)).start()
                 if port == '7001':
-                    t3 =Thread(target=server1, args=(HOST, 7001))
-                    t3.start()
+                    clients.append[client]
+                    clients1.append[client]
+                    clients2.append[client]
+                    clients3.append[client]
                     #clients, PORTS = accept(port, server3,server1,server2,server4)
                     #Thread(target=ClientConnectionVideo, args=(port, client, clients, PORTS,)).start()
                 break
@@ -124,17 +146,25 @@ print("YOU ARE THE MAIN HOST!")
 HOST = "169.254.251.99"
 ports = {'5001':False,'6001':False,'7001':False}
 addresses = {}
-clients = {}
+clients = []
+clients1 = []
+clients2 = []
+clients3 = []
 PORTU = 9999
 PORT  = 1001
 PORT2 = 2001
 PORT3 = 3001
 PORT4 = 4001
 
-
 #MULTITHREADING PART
 #start all receiving ports
 Univ  = Thread(target=ConnectionsUniv, args=(HOST,PORTU ))
 Univ.start()
-t2 = Thread(target=server2, args=(HOST,PORT2))
+t4 = Thread(target=server2, args=(HOST,PORT2))
+t4.start()
+t  = Thread(target=server1, args=(HOST,5001))
+t.start()
+t2 =Thread(target=server1, args=(HOST, 6001))
 t2.start()
+t3 =Thread(target=server1, args=(HOST, 7001))
+t3.start()
