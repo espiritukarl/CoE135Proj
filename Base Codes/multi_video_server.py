@@ -1,5 +1,6 @@
 #server receives everything and displays it but cannot pass it to other clients
 #disconnection not present yet
+#test broadcast
 import threading
 from threading import Thread
 import time
@@ -13,7 +14,7 @@ import pickle
 import pyaudio
 import select
 
-def server1(HOST, PORT):    #receives data from client1
+def server1(HOST, PORT, me ):    #receives data from client1
    print('SERVER1: Starting... (Preparing Sockets for Receiving VData)')
    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
    s.bind((HOST,PORT))
@@ -45,8 +46,18 @@ def server1(HOST, PORT):    #receives data from client1
       #string = ("Friend#{} Camera",NUM)
       cv2.imshow("Friend Camera",frame)
       
+      if len(addresses) > 1:
+         broadcast(me,data)
+
       if cv2.waitKey(1) & 0xFF == ord('q'):   #press q on window to stop
-         break
+        break
+
+
+def broadcast(clientSocket, data_to_be_sent):
+    for client in addresses:
+        if client != clientSocket:
+            client.sendall(data_to_be_sent)
+
 
 def server2(HOST2, PORT2):    #sends data to client2
     print("SERVER2: Starting... (Preparing Sockets for Sending VData)")
@@ -91,7 +102,7 @@ def ConnectionsUniv(HOSTU,PORTU):
                 if port == '5001':
                     #clients, PORTS = accept(port, server1,server2,server3,server4)
                     #Thread(target=ClientConnectionVideo, args=(port, client, clients, PORTS,)).start()
-                    t  = Thread(target=server1, args=(HOST,5001))
+                    t  = Thread(target=server1, args=(HOST,5001,client))
                     t.start()
                 if port == '6001':
                     t2 =Thread(target=server1, args=(HOST, 6001))
@@ -120,5 +131,10 @@ PORT2 = 2001
 PORT3 = 3001
 PORT4 = 4001
 
+
 #MULTITHREADING PART
 #start all receiving ports
+Univ  = Thread(target=ConnectionsUniv, args=(HOST,PORTU ))
+Univ.start()
+t2 = Thread(target=server2, args=(HOST,PORT2))
+t2.start()
