@@ -234,7 +234,7 @@ clients = {} #for chat
 addresses = {} #for chat
 addresses2 = {} #for audio
 
-HOST = "127.0.0.1"
+HOST = "192.168.100.6"
 PORT  = 1001
 PORT2 = 2001
 PORT3 = 3001

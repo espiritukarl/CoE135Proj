@@ -1,6 +1,7 @@
-# SUPERCLIENT 1.40
+# SUPERCLIENT 1.51
 # PURE CLIENT. NO SERVER INCLUDED.
-# PROPER DISCONNECTION HANDLNIG FOR AUDIO&CHATROOM
+# PROPER DISCONNECTION HANDLING FOR AUDIO&CHATROOM
+# PROPER SELF CAMERA SHOWN
 
 from threading import Thread
 import cv2
@@ -30,8 +31,8 @@ def client1(HOST, PORT): #sends the data to server
 
     while True:
         ret, frame = cam.read()
-        result, frame = cv2.imencode('.jpg', frame, encode_param)
         cv2.imshow('SELF CAMERA',frame)
+        result, frame = cv2.imencode('.jpg', frame, encode_param)
         #data = zlib.compress(pickle.dumps(frame, 0))
         data = pickle.dumps(frame, 0)
         size = len(data)
