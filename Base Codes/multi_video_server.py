@@ -1,4 +1,4 @@
-#server receives everything and displays it but cannot pass it to other clients
+#main host's video cannot be broadcasted yet  first connection will be the only one to receive
 #disconnection not present yet
 #test broadcast
 import threading
@@ -14,19 +14,11 @@ import pickle
 import pyaudio
 import select
 
-def server1(HOST, PORT):    #receives data from client1
+def server1(client, clients):    #receives data from client1
    print('SERVER1: Starting... (Preparing Sockets for Receiving VData)')
-   s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-   s.bind((HOST,PORT))
-   s.listen(10)
+   
    #print('SERVER1: Sockets prepared and ready.')
    #if len(addresses) > 1 thus there are other clients send data to them
-   i = 0
-   client={}
-   while ports[PORT] == False:
-         conn,addr = s.accept()
-         client[conn] = addr
-         i = i + 1
 
    #if i < 3 can still accept connections
    #conn,addr=s.accept()
@@ -38,14 +30,14 @@ def server1(HOST, PORT):    #receives data from client1
    while True:
       while len(data) < payload_size:
         #print("Recv: {}".format(len(data)))
-        data += conn.recv(4096)
+        data += clients[0].recv(4096)
       #print("Receiving: {}".format(len(data)))
       packed_msg_size = data[:payload_size]
       data = data[payload_size:]
       msg_size = struct.unpack(">L", packed_msg_size)[0]
       #print("SERVER: Packet Size: {}".format(msg_size))
       while len(data) < msg_size:
-        data += conn.recv(4096)
+        data += clients[0].recv(4096)
       frame_data = data[:msg_size]
       data = data[msg_size:]
 
@@ -54,8 +46,7 @@ def server1(HOST, PORT):    #receives data from client1
       #string = ("Friend#{} Camera",NUM)
       cv2.imshow("Friend Camera",frame)
       
-      if len(addresses) > 1:
-         broadcastVideo(conn,data,client) #unsure if dictionary is passable
+      broadcastVideo(clients[0],data,clients) #unsure if dictionary is passable
       
       #interrupt sana if meron
       #if i < 3:
@@ -100,12 +91,21 @@ def server2(HOST2, PORT2):    #sends data to client2
         img_counter2 += 1
     cam2.release()
 
+def accept( server1,server2,server3):
+    client1,addr1 = server1.accept()
+    client2,addr2 = server2.accept()
+    client3,addr3 = server3.accept()
+    
+    clients = [client1, client2, client3]
+
+    return tuple(clients)
+
 def ConnectionsUniv(HOSTU,PORTU):
     while True:
         serverUniv=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
         serverUniv.bind((HOSTU,PORTU))
         serverUniv.listen(10)
-        client, addr = serverUniv.accept()
+        client, addr = serverUniv.accept() #a connection is present
         addresses[client] = addr
         #quitUsers[addr[0]] = False
         print("{} is connected!!".format(addr))
@@ -116,26 +116,15 @@ def ConnectionsUniv(HOSTU,PORTU):
                 #since port is occupied setup a server for receiving end
                 #1 sender per port thus send the assigned socket to a thread a start that thread  
                 if port == '5001':
-                    clients.append[client]
-                    clients1.append[client]
-                    clients2.append[client]
-                    clients3.append[client]
-                    #clients, PORTS = accept(port, server1,server2,server3,server4)
-                    #Thread(target=ClientConnectionVideo, args=(port, client, clients, PORTS,)).start()
-                if port == '6001':
-                    clients.append[client]
-                    clients1.append[client]
-                    clients2.append[client]
-                    clients3.append[client]
-                    #clients, PORTS = accept(port, server2,server1,server3,server4)
-                    #Thread(target=ClientConnectionVideo, args=(port, client, clients, PORTS,)).start()
+                    clients = accept(s1,s2,s3) #setup clients and main port for sendin
+                    Thread(target=server1, args=(client, clients)).start() 
+                    #begin own thread wherein Clients[0] is the sender of data and all other parts of the array are receivers  
+                if port == '6001': 
+                    clients = accept(s2,s1,s3)
+                    Thread(target=server1, args=(client, clients)).start() 
                 if port == '7001':
-                    clients.append[client]
-                    clients1.append[client]
-                    clients2.append[client]
-                    clients3.append[client]
-                    #clients, PORTS = accept(port, server3,server1,server2,server4)
-                    #Thread(target=ClientConnectionVideo, args=(port, client, clients, PORTS,)).start()
+                    clients = accept(s3,s2,s1)
+                    Thread(target=server1, args=(client, clients)).start() 
                 break
 
 
@@ -155,16 +144,29 @@ PORT  = 1001
 PORT2 = 2001
 PORT3 = 3001
 PORT4 = 4001
+#setup 3 connection
+s1=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s1.bind((HOST,PORT2))
+s1.listen(10)
+
+s2=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s2.bind((HOST,PORT3))
+s2.listen(10)
+
+s3=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+s3.bind((HOST,PORT4))
+s3.listen(10)
 
 #MULTITHREADING PART
 #start all receiving ports
 Univ  = Thread(target=ConnectionsUniv, args=(HOST,PORTU ))
 Univ.start()
-t4 = Thread(target=server2, args=(HOST,PORT2))
-t4.start()
-t  = Thread(target=server1, args=(HOST,5001))
-t.start()
-t2 =Thread(target=server1, args=(HOST, 6001))
-t2.start()
-t3 =Thread(target=server1, args=(HOST, 7001))
-t3.start()
+t4 = Thread(target=server2, args=(HOST,PORT))
+t4.start() #main
+
+#t  = Thread(target=server1, args=(HOST,5001))
+#t.start()
+#t2 =Thread(target=server1, args=(HOST, 6001))
+#t2.start()
+#t3 =Thread(target=server1, args=(HOST, 7001))
+#t3.start()
