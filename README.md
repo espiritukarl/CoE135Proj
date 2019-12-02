@@ -15,16 +15,16 @@ Week 4: Stable One-to-one Video Communication with One-sided Audio Communication
 Week 5: One-to-one (maybe one-to-many, needs to be tested) Video-Audio-Chatroom Communication synced. [Working Client-Server](https://github.com/espiritukarl/CoE135Proj/tree/master/Week3)
 
 ## Things to Implement:  
-- Proper disconnection handling for video (audio&chatroom done)  
-- Synchronized disconnection (audio&chatroom synchronzied but video not yet)
+- Proper disconnection handling for video only 
+- Synchronized disconnection (audio&chatroom synchronized but video not yet)
 - Test One-to-Many connection
-- Test when a client disconnects can others enter
+- [NEW!] Send Video/Audio Data of a client to another client (for 3-4 ways system)
+- [NEW!] Arrangement of threads and acceptance for each participant setting (e.g. choose 3-way or 4-way)
 
-## Things to Reconsider
-- Participants should have a proper firewall setting
-- Participants should have at least WINDOWS 7/8.1/10 PRO INSTALLED (NOT IN VM)
-- Participants should have at the specific Python 3.6 version installed.
-- Participants must contribute fairly and treat co-participates WELL.
-- Participants must listen to each other instead of INSULTING in the chatroom.
-- Participants MUST HAVE A FAIR AMOUNT OF GITHUB CONTRIBUTIONS FOR THE LAST 5 WEEKS
-- Participants that do not contribute or help must be punished accordingly.
+## Prerequisites
+- Microsoft Windows 7/8.1/10 Pro/Education/Enterprise
+- Python 3.6 (Specific)
+- Camera for each participant (Installed with drivers)
+- Microphone (or Line-in) and Speakers (Audio Out) for each participant
+- Powershell/Command Prompt Terminal (Any Terminal for Windows will do)
+- Installed all Python Libraries Required (e.g. PyAudio)
