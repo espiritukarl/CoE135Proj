@@ -1,4 +1,4 @@
-# HYPERCLIENT 2.00
+# HYPERCLIENT 2.50
 # PURE CLIENT. NO SERVER INCLUDED.
 # MULTIPLE CLIENTS CAN CONNECT TO 1 SERVER (WITH LIMIT)
 # [NEW!] NOT TESTABLE ON 1 COMPUTER
@@ -203,7 +203,8 @@ CHUNK=1024
 ADDR = (HOST, CPORT) #tupple for server chatroom
 ADDR1 = (HOST, APORT) #tupple for server audio
 
-Thread(target=client2, args=(HOST,VPORT )).start()
+Thread(target=client1, args=(HOST,VPORT )).start()
+Thread(target=client2, args=(HOST,VPORT2)).start()
 
 
 if __name__ == "__main__":

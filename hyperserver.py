@@ -1,4 +1,4 @@
-# HYPERSERVER 2.00
+# HYPERSERVER 2.50
 # PURE SERVER. NO CLIENT INCLUDED.
 # ONE SERVER, MULTIPLE CLIENTS (WITH LIMIT)
 # [NEW!] NOT TESTABLE ON 1 COMPUTER
@@ -16,19 +16,19 @@ import tkinter
 def server1(conn1, addr1):    #receives data from client1
    data = b""
    payload_size = struct.calcsize(">L")
-   print("SERVER1: Connected! Launching Camera Window...")
+   print("SERVER1: {} Connected! Launching Camera Window...".format(addr1))
 
    while True:
       while len(data) < payload_size:
         #print("Recv: {}".format(len(data)))
-        data += conn.recv(4096)
+        data += conn1.recv(4096)
       #print("Receiving: {}".format(len(data)))
       packed_msg_size = data[:payload_size]
       data = data[payload_size:]
       msg_size = struct.unpack(">L", packed_msg_size)[0]
       #print("SERVER: Packet Size: {}".format(msg_size))
       while len(data) < msg_size:
-        data += conn.recv(4096)
+        data += conn1.recv(4096)
       frame_data = data[:msg_size]
       data = data[msg_size:]
 
@@ -43,11 +43,6 @@ def server1(conn1, addr1):    #receives data from client1
 
 def server2(conn2,addr2):    #sends data to client2
     print("SERVER2: Starting... (Preparing Sockets for Sending VData)")
-    #s2=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-    #s2.bind((HOST2,PORT2))
-    #s2.listen(10)
-    #print('Socket now listening')
-    #conn2,addr2=s2.accept()
     cam2 = cv2.VideoCapture(0 + cv2.CAP_DSHOW)
     cam2.set(3, 640)
     cam2.set(4, 480)
@@ -85,6 +80,24 @@ def hypervsend(HOST,VPORT,limit):
         conn, addr = s.accept()     # blocking function
         print ('CLIENT {}: CONNECTED SUCCESSFULLY!'.format(addr))
         Thread(target=server2, args=(conn,addr)).start()
+        count += 1
+    s.close()
+
+def hypervrecv(HOST,VPORT,limit):
+    print('HYPERRECV (VIDEO): STARTING...')
+    count = 0
+    s=socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+    s.bind((HOST,VPORT))
+    s.listen(10)
+
+    while True:
+        # checker to block another transmission
+        if count == limit:
+            print("[LIMIT REACHED!]: No more participants will be accepted.")
+            break
+        conn, addr = s.accept()     # blocking function
+        print ('CLIENT {}: CONNECTED SUCCESSFULLY!'.format(addr))
+        Thread(target=server1, args=(conn,addr)).start()
         count += 1
     s.close()
 
@@ -235,8 +248,9 @@ top.protocol("WM_DELETE_WINDOW", on_closing)
 
 
 print("YOU ARE THE MAIN HOST!")
-#HOST = input("Enter Your Server IP:\n")        # check ipconfig for an available local iPV4 address
-#HOST2 = input("Enter Client IP ADDRESS:\n")        # check ipconfig for an available local iPV4 address
+#HOST = input("Enter Your Server IP: ")        # check ipconfig for an available local iPV4 address
+#HOST2 = input("Enter Client IP ADDRESS: ")        # check ipconfig for an available local iPV4 address
+#limit = input("Enter # of clients: )           # for configuration
 
 HOST = "192.168.100.6"
 
@@ -244,7 +258,10 @@ VPORT  = 1001   #sending video
 VPORT2 = 2001   #recv video
 APORT = 3001 
 CPORT = 4001
-limit = 3   #can be set later
+
+#debugging variables
+limit  = 1   #for testing purposes 
+limit2 = 2   #can be set later
 
 clients = {} #for chat
 addresses = {} #for chat
@@ -269,7 +286,8 @@ ASERVER.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 ASERVER.bind(ADDR1)
 
 #MULTITHREADING PART
-Thread(target=hypervsend, args=(HOST,VPORT,limit)).start()
+Thread(target=hypervrecv, args=(HOST,VPORT ,limit)).start() #for server1
+Thread(target=hypervsend, args=(HOST,VPORT2,limit2)).start() #for server2
 
 if __name__ == "__main__":
     SERVER.listen(5)
