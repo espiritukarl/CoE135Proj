@@ -1,4 +1,4 @@
-# SUPERSERVER 1.51
+# SUPERSERVER 1.52
 # PURE SERVER. NO CLIENT INCLUDED.
 # VIDEO, AUDIO AND CHAT IS SYNC'D
 # DISCONNECTION HANDLING FOR AUDIO&CHATROOM
@@ -179,7 +179,7 @@ def SendAudio():
         except OSError:
             continue
 
-def RecieveAudio():
+def ReceiveAudio():
     while True:
         try:
             data = recvall(BUFSIZ2)
@@ -285,8 +285,8 @@ if __name__ == "__main__":
     audio=pyaudio.PyAudio()
     stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
 
-    RecieveAudioThread = Thread(target=RecieveAudio).start()
-    SendAudioThread = Thread(target=SendAudio).start()
+    Thread(target=ReceiveAudio).start()
+    Thread(target=SendAudio).start()
 
     receive_thread = Thread(target=receive)
     receive_thread.start()

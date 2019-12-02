@@ -222,8 +222,8 @@ if __name__ == "__main__":
         audio=pyaudio.PyAudio()
         stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
 
-        ReceiveAudioThread = Thread(target=ReceiveAudio).start()
-        SendAudioThread = Thread(target=SendAudio).start()
+        Thread(target=ReceiveAudio).start()
+        Thread(target=SendAudio).start()
 
         receive_thread = Thread(target=receive)
         receive_thread.start()

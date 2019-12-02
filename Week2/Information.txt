@@ -1,3 +1,0 @@
-WEEK 2: WEEK 1 + MULTITHREADING
-
-Not yet fully tested. Needs synchronization and network checking yet.

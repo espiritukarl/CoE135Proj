@@ -1,4 +1,4 @@
-# CoE 135 Project
+# CoE 135 Project (CLEAN BRANCH)
 Members: Espiritu, Raagas, Salgado
 
 # 4-way Video & Audio Conferencing using Sockets (Python)
