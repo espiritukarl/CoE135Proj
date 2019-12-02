@@ -1,7 +1,8 @@
-# HYPERCLIENT 1.00
+# HYPERCLIENT 2.00
 # PURE CLIENT. NO SERVER INCLUDED.
-# MULTIPLE CLIENTS CAN CONNECT TO 1 SERVER
-# VIDEO RECEIVING ONLY
+# MULTIPLE CLIENTS CAN CONNECT TO 1 SERVER (WITH LIMIT)
+# [NEW!] NOT TESTABLE ON 1 COMPUTER
+# SERVER VIDEO ONLY, AUDIO, CHAT
 
 from threading import Thread
 import cv2
@@ -84,7 +85,7 @@ def client2(HOST2, PORT2):   #receives data from server
             
             frame=pickle.loads(frame_data, fix_imports=True, encoding="bytes")
             frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
-            cv2.imshow('Host Camera',frame)
+            cv2.imshow('Server Camera',frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):       #press q on camera window to exit
                 send()
                 break
@@ -95,16 +96,135 @@ def client2(HOST2, PORT2):   #receives data from server
 
     client_socket.close()
 
+#for chatroom:
+def receive():
+    # Handles receiving of messages
+    while True:
+        try:
+            msg = client_socket.recv(BUFSIZ).decode("utf8")
+            msg_list.insert(tkinter.END, msg)
+        except OSError:  # Possibly client has left the chat.
+            break
+
+def send(event=None):  # event is for tkinter
+    # handles sending of messages
+    try:
+        msg = my_msg.get()
+        my_msg.set("")  # Clears input field.
+        client_socket.send(bytes(msg, "utf8"))
+        if msg == "{quit}":
+            client_socket.close()
+            clientaudio_socket.close()
+            top.destroy()
+            
+            print("SERVER HAS CLOSED")
+            raise SystemExit
+    except OSError:
+        pass
+
+def on_closing(event=None):
+    # for closing of window
+    my_msg.set("{quit}")
+    send()
+#end of chatroom
+
+#for audio
+def SendAudio():
+    while True:
+        try:
+            data = stream.read(CHUNK)
+            clientaudio_socket.sendall(data)
+        except OSError:
+            break
+
+def ReceiveAudio():
+    while True:
+        try:
+            data = recvall(BUFSIZ2)
+            stream.write(data)
+        except OSError:
+            break
+
+def recvall(size):
+    databytes = b''
+    while len(databytes) != size:
+        try:
+            to_read = size - len(databytes)
+            if to_read > (4 * CHUNK):
+                databytes += clientaudio_socket.recv(4 * CHUNK)
+            else:
+                databytes += clientaudio_socket.recv(to_read)
+        except OSError:
+            continue
+    return databytes
+#end of audio
+    
+#tkinter GUI shit
+top = tkinter.Tk()
+top.title("Chatbox")
+
+messages_frame = tkinter.Frame(top)
+my_msg = tkinter.StringVar()  # For the messages to be sent.
+scrollbar = tkinter.Scrollbar(messages_frame)  # To navigate through past messages.
+# Following will contain the messages.
+msg_list = tkinter.Listbox(messages_frame, height=35, width=75, yscrollcommand=scrollbar.set)
+scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
+msg_list.pack(side=tkinter.LEFT, fill=tkinter.BOTH)
+msg_list.pack()
+messages_frame.pack()
+
+entry_field = tkinter.Entry(top, textvariable=my_msg)
+entry_field.bind("<Return>", send)
+entry_field.pack()
+send_button = tkinter.Button(top, text="Send", command=send)
+send_button.pack()
+
+top.protocol("WM_DELETE_WINDOW", on_closing)
+#end of tkinter
+
+
 print("YOU ARE A CLIENT!")
 #HOST = input("Enter HOST IP:\n")        # check ipconfig for an available local iPV4 address
 
 HOST = "192.168.100.6"
 
-PORT  = 1001
-PORT2 = 2001
-PORT3 = 3001
-PORT4 = 4001
-PORT5 = 5001 #for chat
-PORT6 = 6001 #for audio
+VPORT  = 1001
+VPORT2 = 2001
+APORT  = 3001
+CPORT  = 4001
 
-Thread(target=client2, args=(HOST,PORT )).start()
+BUFSIZ = 1024 #for chat
+BUFSIZ2 = 4096 #for audio
+FORMAT=pyaudio.paInt16
+CHANNELS=2
+RATE=44100
+CHUNK=1024
+
+ADDR = (HOST, CPORT) #tupple for server chatroom
+ADDR1 = (HOST, APORT) #tupple for server audio
+
+Thread(target=client2, args=(HOST,VPORT )).start()
+
+
+if __name__ == "__main__":
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    clientaudio_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientaudio_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    
+    try:
+        client_socket.connect(ADDR)
+        clientaudio_socket.connect(ADDR1)
+        audio=pyaudio.PyAudio()
+        stream=audio.open(format=FORMAT,channels=CHANNELS, rate=RATE, input=True, output = True,frames_per_buffer=CHUNK)
+
+        Thread(target=ReceiveAudio).start()
+        Thread(target=SendAudio).start()
+
+        receive_thread = Thread(target=receive)
+        receive_thread.start()
+    
+        tkinter.mainloop()
+        
+    except OSError:
+        print("SERVER IS CLOSED. CLIENT FAILED TO START.")
