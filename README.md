@@ -1,5 +1,7 @@
-# CoE 135 Project
+# CoE 135 Project (MAIN BRANCH)
 Members: Espiritu, Raagas, Salgado
+
+To see the cleaner and more summarize branch, please see "clean" branch.
 
 # 4-way Video & Audio Conferencing using Sockets (Python)
 This project aims to make a maximum of 4-way video & audio conferencing using sockets on Python. This project tool is intended to be used within the same network (Wi-Fi/LAN) without the need for an ISP service. This tool can be used by workers/students inside a building or campus to talk face-to-face.
@@ -22,7 +24,7 @@ Week 5: One-to-one (maybe one-to-many, needs to be tested) Video-Audio-Chatroom 
 - [NEW!] Arrangement of threads and acceptance for each participant setting (e.g. choose 3-way or 4-way)
 
 ## Prerequisites
-- Microsoft Windows 7/8.1/10 Pro/Education/Enterprise
+- Microsoft Windows 7/8.1/10 Ultimate/Pro/Education/Enterprise
 - Python 3.6 (Specific)
 - Camera for each participant (Installed with drivers)
 - Microphone (or Line-in) and Speakers (Audio Out) for each participant
