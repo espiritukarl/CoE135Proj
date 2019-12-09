@@ -1,6 +1,6 @@
-# HYPERSERVER 2.50
+# HYPERSERVER 2.51 (LATEST STABLE)
 # PURE SERVER. NO CLIENT INCLUDED.
-# ONE SERVER, MULTIPLE CLIENTS (WITH LIMIT)
+# ONE SERVER, MULTIPLE CLIENTS (WITH LIMIT) AND FRIEND #
 # [NEW!] NOT TESTABLE ON 1 COMPUTER
 # SERVER VIDEO ONLY, AUDIO, CHAT
 
@@ -13,7 +13,7 @@ import pyaudio
 import tkinter
 
 
-def server1(conn1, addr1):    #receives data from client1
+def server1(conn1, addr1,count):    #receives data from client1
    data = b""
    payload_size = struct.calcsize(">L")
    print("SERVER1: {} Connected! Launching Camera Window...".format(addr1))
@@ -35,7 +35,8 @@ def server1(conn1, addr1):    #receives data from client1
       frame = pickle.loads(frame_data, fix_imports=True, encoding="bytes")
       frame = cv2.imdecode(frame, cv2.IMREAD_COLOR)
       #string = ("Friend#{} Camera",NUM)
-      cv2.imshow("Friend Camera",frame)
+      string = "Friend Camera {}".format(count)
+      cv2.imshow(string,frame)
 
       if cv2.waitKey(1) & 0xFF == ord('q'):   #press q on window to stop
          send()
@@ -97,7 +98,7 @@ def hypervrecv(HOST,VPORT,limit):
             break
         conn, addr = s.accept()     # blocking function
         print ('CLIENT {}: CONNECTED SUCCESSFULLY!'.format(addr))
-        Thread(target=server1, args=(conn,addr)).start()
+        Thread(target=server1, args=(conn,addr,count)).start()
         count += 1
     s.close()
 
@@ -260,8 +261,8 @@ APORT = 3001
 CPORT = 4001
 
 #debugging variables
-limit  = 1   #for testing purposes 
-limit2 = 2   #can be set later
+limit  = 3   #for testing purposes 
+
 
 clients = {} #for chat
 addresses = {} #for chat
@@ -287,7 +288,7 @@ ASERVER.bind(ADDR1)
 
 #MULTITHREADING PART
 Thread(target=hypervrecv, args=(HOST,VPORT ,limit)).start() #for server1
-Thread(target=hypervsend, args=(HOST,VPORT2,limit2)).start() #for server2
+Thread(target=hypervsend, args=(HOST,VPORT2,limit)).start() #for server2
 
 if __name__ == "__main__":
     SERVER.listen(5)
