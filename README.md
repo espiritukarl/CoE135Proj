@@ -13,18 +13,16 @@ Week 2: Implementation of Multi-threading and Syncronization to make a 1-1 video
 Week 3: Integrating Audio Stream sending to make a 1-1 Video-Audio Communication (Unstable)  
 Week 4: Stable One-to-one Video Communication with One-sided Audio Communication (Client hears the Host). Chatbox implemented.  
 Week 5: One-to-one (maybe one-to-many, needs to be tested) Video-Audio-Chatroom Communication synced. [Working Client-Server](https://github.com/espiritukarl/CoE135Proj/tree/master/Week3)
+Week 6: [LAST OFFICIAL COMMIT] Created HyperFiles to support multiple clients on 1 server. 4-way AUDIO, 4-way VIDEO (SERVER SIDE), 2-way VIDEO (CLIENT SIDE). Added limits variable for control.
 
 ## Things to Implement:  
 - Proper disconnection handling for video only 
 - Synchronized disconnection (audio&chatroom synchronized but video not yet)
-- Test One-to-Many connection
-- [NEW!] Send Video/Audio Data of a client to another client (for 3-4 ways system)
-- [NEW!] Arrangement of threads and acceptance for each participant setting (e.g. choose 3-way or 4-way)
 
 ## Prerequisites
-- Microsoft Windows 7/8.1/10 Pro/Education/Enterprise
-- Python 3.6 (Specific)
+- Microsoft Windows 7/8.1/10 Ultimate/Pro/Education/Enterprise
+- At most Python 3.6.8 (Specific)
 - Camera for each participant (Installed with drivers)
-- Microphone (or Line-in) and Speakers (Audio Out) for each participant
-- Powershell/Command Prompt Terminal (Any Terminal for Windows will do)
-- Installed all Python Libraries Required (e.g. PyAudio)
+- CONNECTED Microphone (or Line-in) and Speakers (Audio Out) for each participant
+- Powershell/Command Prompt Terminal
+- Installed PyAudio (pip install pyaudio), OpenCV (pip install opencv-python)
