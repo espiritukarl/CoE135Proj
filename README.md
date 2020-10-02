@@ -16,6 +16,8 @@ Week 3: Integrating Audio Stream sending to make a 1-1 Video-Audio Communication
 Week 4: Stable One-to-one Video Communication with One-sided Audio Communication (Client hears the Host). Chatbox implemented.  
 Week 5: One-to-one (maybe one-to-many, needs to be tested) Video-Audio-Chatroom Communication synced. [Working Client-Server](https://github.com/espiritukarl/CoE135Proj/tree/master/Week3)
 
+[PROJECT CLOSED AND ARCHIVED - THANK YOU!]
+
 ## Things to Implement:  
 - Proper disconnection handling for video only 
 - Synchronized disconnection (audio&chatroom synchronized but video not yet)
